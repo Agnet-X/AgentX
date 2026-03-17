@@ -243,12 +243,26 @@
     .setting-row .sv { color: var(--muted); font-size: 0.72rem; }
 
     /* ─── STATIC SIDEBAR ─── */
-    .sidebar {
-      width: 205px; background: var(--bg2); border-left: 1px solid var(--border);
+    .sidebar { width: 205px; background: var(--bg2); border-left: 1px solid var(--border);
       display: flex; flex-direction: column; flex-shrink: 0; overflow-y: auto;
+      transition: width 0.3s ease, opacity 0.3s ease;
     }
+    .sidebar.hidden { width: 0; opacity: 0; overflow: hidden; border: none; }
     .sidebar::-webkit-scrollbar { width: 3px; }
     .sidebar::-webkit-scrollbar-thumb { background: var(--border); }
+
+    .toggle-sidebar-btn {
+      width: 32px; height: 32px;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--muted);
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+    .toggle-sidebar-btn:hover { border-color: var(--border-hover); color: var(--text); }
 
     .sidebar-section { padding: 13px 11px 7px; }
     .sidebar-title {
@@ -412,7 +426,12 @@
 
   <!-- Right side -->
   <div class="header-right">
-
+    <button class="toggle-sidebar-btn" onclick="toggleSidebar()" title="إخفاء/إظهار الشريط الجانبي" id="sidebarToggleBtn">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <rect x="3" y="3" width="18" height="18" rx="2"/>
+        <line x1="9" y1="3" x2="9" y2="21"/>
+      </svg>
+    </button>
   </div>
 </header>
 
@@ -555,6 +574,16 @@
   // Init
   document.getElementById('displayName').textContent = userName;
   updateHistoryList();
+
+  /* ── Sidebar Toggle ── */
+  let sidebarVisible = true;
+  function toggleSidebar() {
+    sidebarVisible = !sidebarVisible;
+    document.querySelector('.sidebar').classList.toggle('hidden', !sidebarVisible);
+    const btn = document.getElementById('sidebarToggleBtn');
+    btn.style.borderColor = sidebarVisible ? '' : 'rgba(255,255,255,0.3)';
+    btn.style.color = sidebarVisible ? '' : 'var(--text)';
+  }
 
   /* ── Panel ── */
   let panelOpen = false;
