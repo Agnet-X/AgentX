@@ -6,16 +6,16 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
+  const GROQ_API_KEY = process.env.GROQ_API_KEY;
 
-  if (!DEEPSEEK_API_KEY) {
+  if (!GROQ_API_KEY) {
     return res.status(500).json({ error: 'API key غير موجودة' });
   }
 
   try {
     const { system, messages } = req.body;
 
-    const deepseekMessages = [
+    const groqMessages = [
       { role: 'system', content: system || 'أنت مساعد ذكي ومفيد باللغة العربية.' },
       ...messages.map(m => ({
         role: m.role === 'model' ? 'assistant' : 'user',
@@ -23,24 +23,24 @@ export default async function handler(req, res) {
       }))
     ];
 
-    const deepseekRes = await fetch('https://api.deepseek.com/chat/completions', {
+    const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${DEEPSEEK_API_KEY}`
+        'Authorization': `Bearer ${GROQ_API_KEY}`
       },
       body: JSON.stringify({
-        model: 'deepseek-chat',
-        messages: deepseekMessages,
+        model: 'llama-3.3-70b-versatile',
+        messages: groqMessages,
         temperature: 0.7,
         max_tokens: 2048,
       })
     });
 
-    const data = await deepseekRes.json();
+    const data = await groqRes.json();
 
-    if (!deepseekRes.ok) {
-      return res.status(deepseekRes.status).json({ error: data?.error?.message || 'DeepSeek API error' });
+    if (!groqRes.ok) {
+      return res.status(groqRes.status).json({ error: data?.error?.message || 'Groq API error' });
     }
 
     const reply = data?.choices?.[0]?.message?.content;
