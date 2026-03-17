@@ -243,7 +243,7 @@
     .setting-row .sv { color: var(--muted); font-size: 0.72rem; }
 
     /* ─── STATIC SIDEBAR ─── */
-    .sidebar { width: 205px; background: var(--bg2); border-left: 1px solid var(--border);
+    .sidebar { width: 205px; background: var(--bg2); border-right: 1px solid var(--border);
       display: flex; flex-direction: column; flex-shrink: 0; overflow-y: auto;
       transition: width 0.3s ease, opacity 0.3s ease;
     }
@@ -479,10 +479,10 @@
 </div>
 
 <!-- Main layout -->
-<div class="layout">
+<div class="layout" style="direction:ltr;">
 
-  <!-- Static quick sidebar -->
-  <div class="sidebar">
+  <!-- Static quick sidebar (left side) -->
+  <div class="sidebar" style="direction:rtl;">>
     <div class="sidebar-section">
       <div class="sidebar-title">💻 برمجة</div>
       <button class="quick-btn" onclick="quickSend('اشرح لي مفهوم الـ OOP بمثال عملي')"><span class="q-icon">🧱</span>شرح OOP</button>
@@ -505,7 +505,7 @@
   </div>
 
   <!-- Chat -->
-  <div class="chat-area">
+  <div class="chat-area" style="direction:rtl;">
     <div id="messages">
       <div class="welcome" id="welcomeScreen">
         <div class="welcome-logo">
