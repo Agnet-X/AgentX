@@ -37,7 +37,7 @@ export default async function handler(req, res) {
           'X-Title': 'AgentX'
         },
         body: JSON.stringify({
-          model: 'meta-llama/llama-3.2-11b-vision-instruct:free',
+          model: 'meta-llama/llama-4-maverick:free',
           messages: orMessages,
           max_tokens: 2048
         })
