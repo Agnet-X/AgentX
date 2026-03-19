@@ -37,7 +37,7 @@ export default async function handler(req, res) {
           'X-Title': 'AgentX'
         },
         body: JSON.stringify({
-          model: 'google/gemma-3-12b-it:free',
+          model: 'google/gemma-3-27b-it:free',
           messages: orMessages,
           max_tokens: 2048
         })
