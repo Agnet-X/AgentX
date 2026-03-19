@@ -567,8 +567,12 @@
           </svg>
         </button>
       </div>
-      <div id="imagePreview" style="display:none; padding:6px 0 0; font-size:0.75rem; color:var(--muted);">
-        🖼️ <span id="imageName"></span> <button onclick="clearImage()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:11px;">✕ إزالة</button>
+      <div id="imagePreview" style="display:none; padding:6px 0 0;">
+        <div style="display:flex;align-items:center;gap:8px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:6px 10px;">
+          <img id="imageThumb" style="width:40px;height:40px;object-fit:cover;border-radius:6px;" src="" alt=""/>
+          <span style="font-size:0.75rem;color:var(--muted);flex:1;" id="imageName"></span>
+          <button onclick="clearImage()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;">✕</button>
+        </div>
       </div>
       <div id="pdfPreview" style="display:none; padding:6px 0 0; font-size:0.75rem; color:var(--muted);">
         📄 <span id="pdfName"></span> <button onclick="clearPDF()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:11px;">✕ إزالة</button>
@@ -688,8 +692,9 @@
     const reader = new FileReader();
     reader.onload = (e) => {
       const base64 = e.target.result.split(',')[1];
-      selectedImage = { data: base64, mimeType: file.type, name: file.name };
+      selectedImage = { data: base64, mimeType: file.type, name: file.name, dataUrl: e.target.result };
       document.getElementById('imageName').textContent = file.name;
+      document.getElementById('imageThumb').src = e.target.result;
       document.getElementById('imagePreview').style.display = 'block';
     };
     reader.readAsDataURL(file);
@@ -730,7 +735,8 @@
     if (loading) return;
 
     hideWelcome();
-    appendMsg('user', text + (selectedPDF ? `\n📄 ${selectedPDF.name}` : ''));
+    const displayText = text + (selectedPDF ? `\n📄 ${selectedPDF.name}` : '');
+    appendMsg('user', displayText, selectedImage?.dataUrl);
     input.value = '';
     autoResize(input);
     msgCount++;
@@ -771,7 +777,7 @@
   function hideWelcome() { document.getElementById('welcomeScreen')?.remove(); }
 
   /* ── Messages ── */
-  function appendMsg(role, text) {
+  function appendMsg(role, text, imageUrl) {
     const msgs = document.getElementById('messages');
     const div  = document.createElement('div');
     div.className = `msg ${role}`;
@@ -782,7 +788,15 @@
 
     const bub = document.createElement('div');
     bub.className = 'msg-bubble';
-    bub.innerHTML = fmt(text);
+    if (imageUrl) {
+      const img = document.createElement('img');
+      img.src = imageUrl;
+      img.style.cssText = 'max-width:220px;max-height:180px;border-radius:8px;display:block;margin-bottom:8px;';
+      bub.appendChild(img);
+    }
+    const textDiv = document.createElement('div');
+    textDiv.innerHTML = fmt(text);
+    bub.appendChild(textDiv);
 
     div.appendChild(av); div.appendChild(bub); msgs.appendChild(div);
 
