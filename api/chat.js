@@ -6,18 +6,18 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const GROQ_API_KEY       = process.env.GROQ_API_KEY;
-  const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
+  const GROQ_API_KEY = process.env.GROQ_API_KEY;
+  const AICC_API_KEY = process.env.AICC_API_KEY;
 
   try {
     const { system, messages, image } = req.body;
 
-    // صورة → OpenRouter Vision
+    // صورة → AICC
     if (image) {
-      if (!OPENROUTER_API_KEY) return res.status(500).json({ error: 'OPENROUTER_API_KEY غير موجودة' });
+      if (!AICC_API_KEY) return res.status(500).json({ error: 'AICC_API_KEY غير موجودة' });
 
       const lastMsg = messages[messages.length - 1];
-      const orMessages = [
+      const aiccMessages = [
         { role: 'system', content: system || 'أنت مساعد ذكي.' },
         {
           role: 'user',
@@ -28,23 +28,21 @@ export default async function handler(req, res) {
         }
       ];
 
-      const orRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      const aiccRes = await fetch('https://api.ai.cc/v1/chat/completions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-          'HTTP-Referer': 'https://agent-x-w74j.vercel.app',
-          'X-Title': 'AgentX'
+          'Authorization': `Bearer ${AICC_API_KEY}`
         },
         body: JSON.stringify({
-          model: 'google/gemma-3-27b-it:free',
-          messages: orMessages,
+          model: 'gpt-4o-mini',
+          messages: aiccMessages,
           max_tokens: 2048
         })
       });
 
-      const data = await orRes.json();
-      if (!orRes.ok) return res.status(orRes.status).json({ error: data?.error?.message || 'OpenRouter error' });
+      const data = await aiccRes.json();
+      if (!aiccRes.ok) return res.status(aiccRes.status).json({ error: data?.error?.message || 'AICC error' });
 
       const reply = data?.choices?.[0]?.message?.content;
       if (!reply) return res.status(500).json({ error: 'لم يصل رد' });
