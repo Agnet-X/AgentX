@@ -389,6 +389,14 @@
     }
     #userInput::placeholder { color: var(--muted); }
 
+    .img-btn {
+      width: 35px; height: 35px; background: var(--bg4); border: 1px solid var(--border);
+      border-radius: 9px; color: var(--muted); cursor: pointer;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+      transition: all 0.2s;
+    }
+    .img-btn:hover { border-color: var(--border-hover); color: var(--text); }
+
     .send-btn {
       width: 35px; height: 35px; background: var(--white); border: none;
       border-radius: 9px; color: #000; font-size: 14px; cursor: pointer;
@@ -536,12 +544,34 @@
         <textarea id="userInput" rows="1"
           placeholder="اسأل AgentX عن برمجة، مادة دراسية، أو أي شيء..."
           onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+        <label for="imageInput" class="img-btn" title="رفع صورة">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
+            <polyline points="21 15 16 10 5 21"/>
+          </svg>
+        </label>
+        <input type="file" id="imageInput" accept="image/*" style="display:none" onchange="handleImage(this)">
+        <label for="pdfInput" class="img-btn" title="رفع PDF">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="9" y1="13" x2="15" y2="13"/>
+            <line x1="9" y1="17" x2="15" y2="17"/>
+          </svg>
+        </label>
+        <input type="file" id="pdfInput" accept=".pdf,.txt" style="display:none" onchange="handlePDF(this)">
         <button class="send-btn" id="sendBtn" onclick="sendMessage()">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <line x1="22" y1="2" x2="11" y2="13"/>
             <polygon points="22 2 15 22 11 13 2 9 22 2"/>
           </svg>
         </button>
+      </div>
+      <div id="imagePreview" style="display:none; padding:6px 0 0; font-size:0.75rem; color:var(--muted);">
+        🖼️ <span id="imageName"></span> <button onclick="clearImage()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:11px;">✕ إزالة</button>
+      </div>
+      <div id="pdfPreview" style="display:none; padding:6px 0 0; font-size:0.75rem; color:var(--muted);">
+        📄 <span id="pdfName"></span> <button onclick="clearPDF()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:11px;">✕ إزالة</button>
       </div>
       <div class="input-hint">Enter للإرسال · Shift+Enter لسطر جديد · مدعوم بـ Groq AI</div>
     </div>
@@ -649,19 +679,64 @@
     });
   }
 
+  /* ── Image handling ── */
+  let selectedImage = null;
+
+  function handleImage(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const base64 = e.target.result.split(',')[1];
+      selectedImage = { data: base64, mimeType: file.type, name: file.name };
+      document.getElementById('imageName').textContent = file.name;
+      document.getElementById('imagePreview').style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function clearImage() {
+    selectedImage = null;
+    document.getElementById('imageInput').value = '';
+    document.getElementById('imagePreview').style.display = 'none';
+  }
+
+  let selectedPDF = null;
+
+  function handlePDF(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      selectedPDF = { text: e.target.result, name: file.name };
+      document.getElementById('pdfName').textContent = file.name;
+      document.getElementById('pdfPreview').style.display = 'block';
+    };
+    reader.readAsText(file);
+  }
+
+  function clearPDF() {
+    selectedPDF = null;
+    document.getElementById('pdfInput').value = '';
+    document.getElementById('pdfPreview').style.display = 'none';
+  }
+
   /* ── Send ── */
   async function sendMessage() {
     const input = document.getElementById('userInput');
     const text  = input.value.trim();
-    if (!text || loading) return;
+    const fullText = selectedPDF ? `${text}\n\n📄 محتوى الملف (${selectedPDF.name}):\n${selectedPDF.text.slice(0, 8000)}` : text;
+    if (!fullText && !selectedImage) return;
+    if (loading) return;
 
     hideWelcome();
-    appendMsg('user', text);
+    appendMsg('user', text + (selectedPDF ? `\n📄 ${selectedPDF.name}` : ''));
     input.value = '';
     autoResize(input);
     msgCount++;
-    saveHistory(text);
-    history.push({ role: 'user', content: text });
+    saveHistory(text || selectedPDF?.name || '');
+    history.push({ role: 'user', content: fullText || text });
+    clearPDF();
 
     const tid = showTyping();
     loading = true;
@@ -671,8 +746,9 @@
       const res  = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ system: systemPrompts[mode], messages: history })
+        body: JSON.stringify({ system: systemPrompts[mode], messages: history, image: selectedImage || undefined })
       });
+      clearImage();
       const data = await res.json();
       removeTyping(tid);
       if (data.error) throw new Error(data.error);
