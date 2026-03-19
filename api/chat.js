@@ -28,7 +28,7 @@ export default async function handler(req, res) {
       })
     ];
 
-    const model = image ? 'llama-3.2-11b-vision-preview' : 'llama-3.3-70b-versatile';
+    const model = image ? 'llama-3.2-90b-vision-preview' : 'llama-3.3-70b-versatile';
 
     const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
