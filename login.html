@@ -4,107 +4,465 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>AgentX — تسجيل الدخول</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import {
+      getAuth,
+      signInWithEmailAndPassword,
+      signInWithPopup,
+      GoogleAuthProvider,
+      RecaptchaVerifier,
+      signInWithPhoneNumber,
+      onAuthStateChanged
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-    // البيانات دي هي اللي كانت ناقصة في الـ Console عندك
+    // ══════════════════════════════════════════
+    //  🔥 ضع هنا إعدادات Firebase الخاصة بك
+    // ══════════════════════════════════════════
     const firebaseConfig = {
-      apiKey: "AIzaSyBMbrB0R0Om0t2kryg4SDhAHoaNSBvFnpc",
-      authDomain: "agentx-27ea9.firebaseapp.com",
-      projectId: "agentx-27ea9",
-      storageBucket: "agentx-27ea9.firebasestorage.app",
-      messagingSenderId: "244685077463",
-      appId: "1:244685077463:web:affd6ce25ea0bdbd1a2992"
+      apiKey:            "YOUR_API_KEY",
+      authDomain:        "YOUR_AUTH_DOMAIN",
+      projectId:         "YOUR_PROJECT_ID",
+      storageBucket:     "YOUR_STORAGE_BUCKET",
+      messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+      appId:             "YOUR_APP_ID"
     };
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
+    const app      = initializeApp(firebaseConfig);
+    const auth     = getAuth(app);
     const provider = new GoogleAuthProvider();
 
-    // منع الرفرش اللانهائي والتحويل التلقائي
+    // بعد تسجيل الدخول روح للصفحة الرئيسية
     onAuthStateChanged(auth, user => {
-      if (user && !window.location.pathname.includes('index.html')) {
-        window.location.replace('index.html');
-      }
+      if (user) window.location.href = 'index.html';
     });
 
-    window.handleAuth = async () => {
-      const email = document.getElementById('emailInput').value.trim();
-      const pass = document.getElementById('passInput').value;
-      const btn = document.getElementById('mainBtn');
+    // ── Email ──
+    window.__emailLogin = (email, pass) =>
+      signInWithEmailAndPassword(auth, email, pass);
 
-      if (!email || !pass) { showSnack('اكتب البيانات الأول'); return; }
-      btn.disabled = true;
-      btn.innerHTML = '<span class="spinner"></span>';
+    // ── Google ──
+    window.__googleLogin = () =>
+      signInWithPopup(auth, provider);
 
-      try {
-        if (window.isRegisterMode) {
-          await createUserWithEmailAndPassword(auth, email, pass);
-        } else {
-          await signInWithEmailAndPassword(auth, email, pass);
-        }
-      } catch (e) {
-        console.error(e);
-        showSnack('فشل الإجراء، تحقق من البيانات');
-        btn.disabled = false;
-        btn.textContent = window.isRegisterMode ? 'إنشاء حساب جديد' : 'تسجيل الدخول';
+    // ── Phone: إرسال OTP ──
+    window.__sendOTP = async (phone) => {
+      if (!window._recaptcha) {
+        window._recaptcha = new RecaptchaVerifier(auth, 'recaptcha-container', {
+          size: 'invisible',
+          callback: () => {}
+        });
+        await window._recaptcha.render();
       }
+      window._confirmResult = await signInWithPhoneNumber(auth, phone, window._recaptcha);
     };
 
-    window.handleGoogle = () => signInWithPopup(auth, provider);
+    // ── Phone: تأكيد OTP ──
+    window.__verifyOTP = (code) =>
+      window._confirmResult.confirm(code);
   </script>
 
   <style>
     :root {
-      --bg: #090910; --bg2: #0f0f18; --purple: #534AB7; --purpleL: #7F77DD;
-      --border: rgba(83,74,183,0.25); --text: #f0f0f0; --muted: rgba(255,255,255,0.35);
+      --bg:       #090910;
+      --bg2:      #0f0f18;
+      --bg3:      #14141f;
+      --purple:   #534AB7;
+      --purpleL:  #7F77DD;
+      --purpleLL: #C8B8FF;
+      --border:   rgba(83,74,183,0.25);
+      --border2:  rgba(255,255,255,0.07);
+      --text:     #f0f0f0;
+      --muted:    rgba(255,255,255,0.35);
+      --w10:      rgba(255,255,255,0.06);
     }
-    body { font-family: 'IBM Plex Sans Arabic'; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; align-items: center; justify-content: center; overflow: hidden; margin: 0; }
-    .orb { position: fixed; border-radius: 50%; filter: blur(60px); pointer-events: none; }
-    .orb-1 { width: 300px; height: 300px; background: rgba(83,74,183,0.2); top: -100px; right: -50px; }
-    .card { background: var(--bg2); border: 1px solid var(--border); border-radius: 24px; padding: 32px; width: 380px; text-align: center; z-index: 10; }
-    .logo-title { font-family: 'Space Grotesk'; font-size: 1.5rem; letter-spacing: 3px; margin-top: 10px; }
-    input { width: 100%; padding: 12px; margin: 10px 0; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 12px; color: white; text-align: center; outline: none; }
-    .btn-main { width: 100%; padding: 13px; background: var(--purple); border: none; border-radius: 12px; color: white; font-weight: 600; cursor: pointer; margin-top: 10px; }
-    .btn-social { width: 100%; padding: 11px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: #ccc; margin-top: 10px; cursor: pointer; }
-    .spinner { display: inline-block; width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.8s linear infinite; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    #snack { position: fixed; bottom: 20px; background: var(--purple); padding: 10px 20px; border-radius: 10px; display: none; }
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family: 'IBM Plex Sans Arabic', sans-serif;
+      background: var(--bg); color: var(--text);
+      min-height: 100dvh; display:flex; align-items:center; justify-content:center;
+      overflow:hidden; position:relative;
+    }
+    .orb { position:fixed; border-radius:50%; pointer-events:none; filter:blur(60px); }
+    .orb-1 { width:320px;height:320px;background:rgba(83,74,183,0.22);top:-100px;right:-80px; }
+    .orb-2 { width:220px;height:220px;background:rgba(29,158,117,0.11);bottom:10px;left:-60px; }
+    #flash {
+      position:fixed;inset:0;background:var(--purpleLL);
+      opacity:0;pointer-events:none;z-index:0;
+      animation:flashLoop 3.5s ease-in-out infinite;
+    }
+    @keyframes flashLoop {
+      0%,8%,100%{opacity:0;} 9%{opacity:0.05;} 10%{opacity:0.02;} 15%{opacity:0.04;} 16%{opacity:0;}
+    }
+    .card {
+      position:relative;z-index:1;width:100%;max-width:380px;
+      background:var(--bg2);border:1px solid var(--border);border-radius:24px;
+      padding:32px 28px 28px;
+      box-shadow:0 0 60px rgba(83,74,183,0.08),0 24px 48px rgba(0,0,0,0.5);
+      animation:cardIn 0.9s cubic-bezier(.22,1,.36,1) both;
+    }
+    @keyframes cardIn {
+      from{opacity:0;transform:translateY(24px) scale(0.97);}
+      to{opacity:1;transform:translateY(0) scale(1);}
+    }
+    .logo-wrap{display:flex;flex-direction:column;align-items:center;gap:8px;margin-bottom:24px;}
+    .bolt-svg{animation:boltGlow 3.5s ease-in-out infinite;}
+    @keyframes boltGlow {
+      0%,100%{filter:drop-shadow(0 0 0 rgba(200,184,255,0));}
+      9%{filter:drop-shadow(0 0 12px rgba(200,184,255,0.7)) drop-shadow(0 0 28px rgba(83,74,183,0.5));}
+      10%{filter:drop-shadow(0 0 4px rgba(200,184,255,0.3));}
+      15%{filter:drop-shadow(0 0 18px rgba(200,184,255,0.6));}
+      16%{filter:drop-shadow(0 0 0 rgba(200,184,255,0));}
+    }
+    .crack{animation:crackReveal 3.5s ease-in-out infinite;}
+    @keyframes crackReveal{0%,8%,100%{opacity:0;}9%,20%{opacity:1;}35%{opacity:0;}}
+    .logo-title{font-family:'Space Grotesk',sans-serif;font-size:1.4rem;font-weight:700;letter-spacing:3px;color:#fff;}
+    .logo-sub{
+      font-size:0.75rem;font-weight:500;letter-spacing:2px;
+      background:linear-gradient(90deg,var(--purple),var(--purpleLL),#fff,var(--purpleLL),var(--purple));
+      background-size:200%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;
+      animation:shimmer 3s linear infinite;
+    }
+    @keyframes shimmer{to{background-position:-200% center;}}
+    .field-wrap{position:relative;margin-bottom:10px;}
+    .field-icon{position:absolute;top:50%;transform:translateY(-50%);right:14px;color:var(--muted);pointer-events:none;display:flex;align-items:center;}
+    .field-suffix{position:absolute;top:50%;transform:translateY(-50%);left:12px;cursor:pointer;color:var(--muted);background:none;border:none;display:flex;align-items:center;padding:4px;}
+    .field-suffix:hover{color:var(--text);}
+    input{
+      width:100%;background:var(--w10);border:0.5px solid var(--border);border-radius:12px;
+      padding:13px 42px 13px 16px;color:#fff;font-family:inherit;font-size:0.88rem;
+      text-align:right;outline:none;transition:border-color 0.25s,box-shadow 0.25s;
+    }
+    input.has-suffix{padding-left:40px;}
+    input::placeholder{color:var(--muted);}
+    input:focus{border-color:rgba(127,119,221,0.7);box-shadow:0 0 0 3px rgba(83,74,183,0.12);}
+    .btn-primary{
+      width:100%;padding:13px;background:var(--purple);border:none;border-radius:12px;
+      color:#fff;font-family:inherit;font-size:0.93rem;font-weight:600;
+      cursor:pointer;transition:background 0.2s,transform 0.15s,box-shadow 0.2s;
+      margin-top:6px;display:flex;align-items:center;justify-content:center;gap:8px;
+    }
+    .btn-primary:hover{background:var(--purpleL);transform:translateY(-1px);box-shadow:0 6px 20px rgba(83,74,183,0.35);}
+    .btn-primary:active{transform:translateY(0);}
+    .btn-primary:disabled{opacity:0.4;cursor:not-allowed;transform:none;}
+    .divider{display:flex;align-items:center;gap:12px;margin:16px 0;}
+    .divider hr{flex:1;border:none;border-top:1px solid var(--border2);}
+    .divider span{color:var(--muted);font-size:0.75rem;}
+    .btn-social{
+      width:100%;padding:11px 16px;background:var(--w10);border:0.5px solid var(--border2);border-radius:12px;
+      color:rgba(255,255,255,0.7);font-family:inherit;font-size:0.83rem;
+      cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;
+      transition:background 0.2s,border-color 0.2s,transform 0.15s;margin-bottom:8px;
+    }
+    .btn-social:hover{background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.18);transform:translateY(-1px);}
+    .btn-social:active{transform:none;}
+    .register-row{text-align:center;margin-top:18px;font-size:0.78rem;color:var(--muted);}
+    .register-row a{color:var(--purpleL);text-decoration:none;font-weight:500;}
+    .register-row a:hover{color:var(--purpleLL);}
+    .spinner{display:inline-block;width:20px;height:20px;border:2.5px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+    #snack{
+      position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);
+      background:var(--purple);color:#fff;padding:10px 20px;border-radius:12px;font-size:0.82rem;
+      box-shadow:0 8px 24px rgba(83,74,183,0.4);transition:transform 0.35s cubic-bezier(.22,1,.36,1);
+      z-index:999;pointer-events:none;white-space:nowrap;
+    }
+    #snack.show{transform:translateX(-50%) translateY(0);}
+
+    /* Modal */
+    .modal-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);z-index:100;align-items:center;justify-content:center;}
+    .modal-backdrop.open{display:flex;}
+    .modal{background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:28px 24px;width:90%;max-width:340px;animation:cardIn 0.4s cubic-bezier(.22,1,.36,1) both;}
+    .modal h3{font-size:1rem;font-weight:600;color:#fff;margin-bottom:6px;text-align:center;}
+    .modal p{font-size:0.78rem;color:var(--muted);text-align:center;margin-bottom:18px;}
+    .modal-btns{display:flex;gap:8px;margin-top:16px;}
+    .btn-cancel{flex:1;padding:11px;background:transparent;border:1px solid var(--border2);border-radius:10px;color:var(--muted);font-family:inherit;font-size:0.85rem;cursor:pointer;transition:border-color 0.2s,color 0.2s;}
+    .btn-cancel:hover{border-color:rgba(255,255,255,0.2);color:#fff;}
+    .btn-confirm{flex:1;padding:11px;background:var(--purple);border:none;border-radius:10px;color:#fff;font-family:inherit;font-size:0.85rem;font-weight:600;cursor:pointer;transition:background 0.2s;display:flex;align-items:center;justify-content:center;gap:6px;}
+    .btn-confirm:hover{background:var(--purpleL);}
+    .btn-confirm:disabled{opacity:0.4;cursor:not-allowed;}
+    .otp-wrap{display:flex;gap:8px;justify-content:center;direction:ltr;}
+    .otp-box{width:42px;height:50px;background:var(--w10);border:1px solid var(--border);border-radius:10px;color:#fff;font-size:1.3rem;font-weight:700;text-align:center;outline:none;font-family:'Space Grotesk',sans-serif;transition:border-color 0.2s,box-shadow 0.2s;}
+    .otp-box:focus{border-color:rgba(127,119,221,0.7);box-shadow:0 0 0 3px rgba(83,74,183,0.15);}
+    .phone-row{display:flex;gap:8px;direction:ltr;}
+    .country-code{width:72px;background:var(--w10);border:0.5px solid var(--border);border-radius:12px;color:#fff;font-family:inherit;font-size:0.88rem;text-align:center;outline:none;padding:13px 6px;transition:border-color 0.25s,box-shadow 0.25s;}
+    .country-code:focus{border-color:rgba(127,119,221,0.7);box-shadow:0 0 0 3px rgba(83,74,183,0.12);}
+    .phone-number{flex:1;text-align:left;padding:13px 14px;}
+
+    @media(max-width:420px){
+      .card{border-radius:0;min-height:100dvh;border:none;padding:28px 18px;justify-content:center;display:flex;flex-direction:column;}
+      body{align-items:flex-start;}
+    }
   </style>
 </head>
 <body>
-  <div class="orb orb-1"></div>
-  <div class="card">
-    <svg width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="white"/></svg>
-    <div class="logo-title">WELCOME</div>
-    <div style="color:var(--purple); font-size: 0.8rem; margin-bottom: 20px;">AgentX.Ai</div>
-    
-    <input type="email" id="emailInput" placeholder="البريد الإلكتروني">
-    <input type="password" id="passInput" placeholder="كلمة المرور">
-    <button class="btn-main" id="mainBtn" onclick="handleAuth()">تسجيل الدخول</button>
-    <button class="btn-social" onclick="handleGoogle()">Google دخول بـ</button>
 
-    <div style="margin-top:20px; font-size:0.8rem; color:#666; cursor:pointer;" onclick="switchMode()">
-      <span id="toggleMode">ليس لديك حساب؟ إنشاء حساب</span>
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+<div id="flash"></div>
+<div id="recaptcha-container"></div>
+
+<!-- ══ CARD ══ -->
+<div class="card">
+  <div class="logo-wrap">
+    <svg class="bolt-svg" width="110" height="96" viewBox="0 0 110 96" fill="none">
+      <line x1="5" y1="80" x2="105" y2="80" stroke="#7F77DD" stroke-width="0.8" opacity="0.35"/>
+      <polygon points="55,2 43,38 50,37 37,78 63,34 55,35" fill="white" opacity="0.95"/>
+      <polygon points="30,10 22,34 27,33 18,62 36,30 29,31" fill="white" opacity="0.7"/>
+      <polygon points="80,10 88,34 83,33 92,62 74,30 81,31" fill="white" opacity="0.7"/>
+      <polygon points="10,22 6,36 9,36 4,54 14,32 11,32" fill="#C8B8FF" opacity="0.45"/>
+      <polygon points="100,22 104,36 101,36 106,54 96,32 99,32" fill="#C8B8FF" opacity="0.4"/>
+      <circle class="crack" cx="48" cy="80" r="5" fill="#C8B8FF" opacity="0.6"/>
+      <g class="crack">
+        <line x1="48" y1="80" x2="20" y2="98"  stroke="url(#cg)" stroke-width="1.8" stroke-linecap="round"/>
+        <line x1="48" y1="80" x2="74" y2="100" stroke="url(#cg)" stroke-width="1.8" stroke-linecap="round"/>
+        <line x1="48" y1="80" x2="0"  y2="90"  stroke="url(#cg)" stroke-width="1.2" stroke-linecap="round"/>
+        <line x1="48" y1="80" x2="105" y2="88" stroke="url(#cg)" stroke-width="1.2" stroke-linecap="round"/>
+        <line x1="48" y1="80" x2="48" y2="96"  stroke="url(#cg)" stroke-width="1.4" stroke-linecap="round"/>
+      </g>
+      <defs>
+        <linearGradient id="cg" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#C8B8FF"/>
+          <stop offset="100%" stop-color="#534AB700"/>
+        </linearGradient>
+      </defs>
+    </svg>
+    <div class="logo-title">WELCOME</div>
+    <div class="logo-sub">AgentX.Ai</div>
+  </div>
+
+  <!-- Email -->
+  <div class="field-wrap">
+    <span class="field-icon">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+        <rect x="2" y="4" width="20" height="16" rx="3"/><polyline points="2,4 12,13 22,4"/>
+      </svg>
+    </span>
+    <input type="email" id="emailInput" placeholder="البريد الإلكتروني" autocomplete="email"/>
+  </div>
+
+  <!-- Password -->
+  <div class="field-wrap">
+    <span class="field-icon">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+        <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+      </svg>
+    </span>
+    <input type="password" id="passInput" placeholder="كلمة المرور" autocomplete="current-password" class="has-suffix"/>
+    <button class="field-suffix" onclick="togglePass()" type="button">
+      <svg id="eyeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+      </svg>
+    </button>
+  </div>
+
+  <button class="btn-primary" id="loginBtn" onclick="handleEmailLogin()">تسجيل الدخول</button>
+
+  <div class="divider"><hr/><span>أو</span><hr/></div>
+
+  <!-- Google -->
+  <button class="btn-social" onclick="handleGoogleLogin()">
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+      <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 01-1.796 2.716v2.258h2.908C16.658 14.013 17.64 11.706 17.64 9.2z" fill="#4285F4"/>
+      <path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z" fill="#34A853"/>
+      <path d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/>
+      <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
+    </svg>
+    المتابعة بـ Google
+  </button>
+
+  <!-- Phone -->
+  <button class="btn-social" onclick="openPhoneModal()">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+      <rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="17" r="1"/>
+    </svg>
+    المتابعة برقم الهاتف
+  </button>
+
+  <div class="register-row">ليس لديك حساب؟ <a href="#">إنشاء حساب</a></div>
+</div>
+
+<!-- ══ PHONE MODAL ══ -->
+<div class="modal-backdrop" id="phoneModal">
+  <div class="modal">
+    <h3>📱 تسجيل الدخول برقم الهاتف</h3>
+    <p>سيتم إرسال كود تحقق عبر SMS</p>
+    <div class="phone-row">
+      <input class="country-code" id="countryCode" type="text" value="+20"/>
+      <input class="phone-number" id="phoneNumber" type="tel" placeholder="1xxxxxxxxx" style="text-align:left;padding-right:14px;"/>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closePhoneModal()">إلغاء</button>
+      <button class="btn-confirm" id="sendOtpBtn" onclick="handleSendOTP()">إرسال الكود</button>
     </div>
   </div>
-  <div id="snack"></div>
+</div>
 
-  <script>
-    window.isRegisterMode = false;
-    function switchMode() {
-      window.isRegisterMode = !window.isRegisterMode;
-      document.getElementById('mainBtn').textContent = window.isRegisterMode ? 'إنشاء حساب جديد' : 'تسجيل الدخول';
-      document.getElementById('toggleMode').textContent = window.isRegisterMode ? 'لديك حساب؟ سجل دخول' : 'ليس لديك حساب؟ إنشاء حساب';
+<!-- ══ OTP MODAL ══ -->
+<div class="modal-backdrop" id="otpModal">
+  <div class="modal">
+    <h3>🔐 أدخل كود التحقق</h3>
+    <p id="otpSubtitle">تم إرسال كود مكون من 6 أرقام إلى رقمك</p>
+    <div class="otp-wrap">
+      <input class="otp-box" maxlength="1" type="tel" id="otp0" oninput="otpNext(this,0)" onkeydown="otpBack(event,0)"/>
+      <input class="otp-box" maxlength="1" type="tel" id="otp1" oninput="otpNext(this,1)" onkeydown="otpBack(event,1)"/>
+      <input class="otp-box" maxlength="1" type="tel" id="otp2" oninput="otpNext(this,2)" onkeydown="otpBack(event,2)"/>
+      <input class="otp-box" maxlength="1" type="tel" id="otp3" oninput="otpNext(this,3)" onkeydown="otpBack(event,3)"/>
+      <input class="otp-box" maxlength="1" type="tel" id="otp4" oninput="otpNext(this,4)" onkeydown="otpBack(event,4)"/>
+      <input class="otp-box" maxlength="1" type="tel" id="otp5" oninput="otpNext(this,5)" onkeydown="otpBack(event,5)"/>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="backToPhone()">رجوع</button>
+      <button class="btn-confirm" id="verifyOtpBtn" onclick="handleVerifyOTP()">تأكيد</button>
+    </div>
+  </div>
+</div>
+
+<div id="snack"></div>
+
+<script>
+  let passVisible = false;
+  function togglePass() {
+    passVisible = !passVisible;
+    document.getElementById('passInput').type = passVisible ? 'text' : 'password';
+    document.getElementById('eyeIcon').innerHTML = passVisible
+      ? `<path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/>
+         <path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/>
+         <line x1="1" y1="1" x2="23" y2="23"/>`
+      : `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>`;
+  }
+
+  let snackTimer;
+  function showSnack(msg) {
+    const el = document.getElementById('snack');
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(snackTimer);
+    snackTimer = setTimeout(() => el.classList.remove('show'), 3500);
+  }
+
+  function translateError(code) {
+    const map = {
+      'auth/user-not-found':            'البريد الإلكتروني غير مسجل',
+      'auth/wrong-password':            'كلمة المرور غير صحيحة',
+      'auth/invalid-email':             'البريد الإلكتروني غير صالح',
+      'auth/user-disabled':             'تم تعطيل هذا الحساب',
+      'auth/too-many-requests':         'محاولات كثيرة، حاول لاحقاً',
+      'auth/network-request-failed':    'تحقق من اتصال الإنترنت',
+      'auth/invalid-credential':        'بيانات الدخول غير صحيحة',
+      'auth/invalid-verification-code': 'كود التحقق غير صحيح',
+      'auth/code-expired':              'انتهت صلاحية الكود، أعد المحاولة',
+      'auth/invalid-phone-number':      'رقم الهاتف غير صالح',
+      'auth/quota-exceeded':            'تجاوزت الحد اليومي للـ SMS',
+    };
+    return map[code] || 'حدث خطأ، حاول مرة أخرى';
+  }
+
+  function setLoginLoading(on) {
+    const b = document.getElementById('loginBtn');
+    b.disabled = on;
+    b.innerHTML = on ? '<span class="spinner"></span>' : 'تسجيل الدخول';
+  }
+  function setSendLoading(on) {
+    const b = document.getElementById('sendOtpBtn');
+    b.disabled = on;
+    b.innerHTML = on ? '<span class="spinner"></span>' : 'إرسال الكود';
+  }
+  function setVerifyLoading(on) {
+    const b = document.getElementById('verifyOtpBtn');
+    b.disabled = on;
+    b.innerHTML = on ? '<span class="spinner"></span>' : 'تأكيد';
+  }
+
+  async function handleEmailLogin() {
+    const email = document.getElementById('emailInput').value.trim();
+    const pass  = document.getElementById('passInput').value;
+    if (!email || !pass) { showSnack('يرجى إدخال البريد وكلمة المرور'); return; }
+    setLoginLoading(true);
+    try {
+      await window.__emailLogin(email, pass);
+    } catch(e) {
+      showSnack(translateError(e.code));
+      setLoginLoading(false);
     }
-    function showSnack(m) {
-      const s = document.getElementById('snack');
-      s.textContent = m; s.style.display = 'block';
-      setTimeout(() => s.style.display = 'none', 3000);
+  }
+
+  async function handleGoogleLogin() {
+    try {
+      await window.__googleLogin();
+    } catch(e) {
+      if (e.code !== 'auth/popup-closed-by-user') showSnack(translateError(e.code));
     }
-  </script>
+  }
+
+  function openPhoneModal() {
+    document.getElementById('phoneModal').classList.add('open');
+    setTimeout(() => document.getElementById('phoneNumber').focus(), 100);
+  }
+  function closePhoneModal() {
+    document.getElementById('phoneModal').classList.remove('open');
+    document.getElementById('phoneNumber').value = '';
+  }
+  function backToPhone() {
+    document.getElementById('otpModal').classList.remove('open');
+    document.getElementById('phoneModal').classList.add('open');
+    clearOTP();
+  }
+
+  async function handleSendOTP() {
+    const code  = document.getElementById('countryCode').value.trim() || '+20';
+    const num   = document.getElementById('phoneNumber').value.trim();
+    if (!num) { showSnack('أدخل رقم الهاتف'); return; }
+    const fullPhone = code + num.replace(/^0/, '');
+    setSendLoading(true);
+    try {
+      await window.__sendOTP(fullPhone);
+      document.getElementById('phoneModal').classList.remove('open');
+      document.getElementById('otpSubtitle').textContent = `تم إرسال كود إلى ${fullPhone}`;
+      document.getElementById('otpModal').classList.add('open');
+      setTimeout(() => document.getElementById('otp0').focus(), 100);
+    } catch(e) {
+      showSnack(translateError(e.code));
+    } finally {
+      setSendLoading(false);
+    }
+  }
+
+  function otpNext(el, idx) {
+    el.value = el.value.replace(/\D/g,'');
+    if (el.value && idx < 5) document.getElementById('otp'+(idx+1)).focus();
+    if (idx === 5 && el.value) handleVerifyOTP();
+  }
+  function otpBack(e, idx) {
+    if (e.key === 'Backspace' && !e.target.value && idx > 0) {
+      document.getElementById('otp'+(idx-1)).focus();
+    }
+  }
+  function clearOTP() { for(let i=0;i<6;i++) document.getElementById('otp'+i).value=''; }
+  function getOTPCode() { return Array.from({length:6},(_,i)=>document.getElementById('otp'+i).value).join(''); }
+
+  async function handleVerifyOTP() {
+    const code = getOTPCode();
+    if (code.length < 6) { showSnack('أدخل الكود كاملاً (6 أرقام)'); return; }
+    setVerifyLoading(true);
+    try {
+      await window.__verifyOTP(code);
+      document.getElementById('otpModal').classList.remove('open');
+    } catch(e) {
+      showSnack(translateError(e.code));
+      clearOTP();
+      document.getElementById('otp0').focus();
+      setVerifyLoading(false);
+    }
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !document.querySelector('.modal-backdrop.open')) handleEmailLogin();
+  });
+</script>
 </body>
 </html>
