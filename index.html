@@ -13,8 +13,6 @@ import {
   createUserWithEmailAndPassword,
   signInWithPopup,
   GoogleAuthProvider,
-  RecaptchaVerifier,
-  signInWithPhoneNumber,
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
@@ -32,7 +30,7 @@ const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
 onAuthStateChanged(auth, user => {
-  if (user) window.location.href = 'index.html';
+  if (user) window.location.href = "index.html";
 });
 
 window.__emailLogin = (email, pass) =>
@@ -43,78 +41,96 @@ window.__register = (email, pass) =>
 
 window.__googleLogin = () =>
   signInWithPopup(auth, provider);
-
-window.__sendOTP = async (phone) => {
-  if (!window._recaptcha) {
-    window._recaptcha = new RecaptchaVerifier(auth, 'recaptcha-container', { size: 'invisible' });
-    await window._recaptcha.render();
-  }
-  window._confirmResult = await signInWithPhoneNumber(auth, phone, window._recaptcha);
-};
-
-window.__verifyOTP = (code) =>
-  window._confirmResult.confirm(code);
 </script>
 
 <style>
-body{background:#090910;color:#fff;font-family:sans-serif;display:flex;justify-content:center;align-items:center;height:100vh}
-.card{background:#111;padding:30px;border-radius:15px;width:300px}
-input,button{width:100%;margin:8px 0;padding:10px;border-radius:8px;border:none}
-button{background:#534AB7;color:#fff;cursor:pointer}
-a{color:#7F77DD;cursor:pointer}
+body {
+  font-family: sans-serif;
+  background: #090910;
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+.card {
+  background: #111;
+  padding: 30px;
+  border-radius: 15px;
+  width: 320px;
+}
+input {
+  width: 100%;
+  padding: 10px;
+  margin: 8px 0;
+  border-radius: 8px;
+  border: none;
+}
+button {
+  width: 100%;
+  padding: 10px;
+  margin: 6px 0;
+  border-radius: 8px;
+  border: none;
+  background: #534AB7;
+  color: white;
+  cursor: pointer;
+}
+a {
+  color: #7F77DD;
+  cursor: pointer;
+}
 </style>
 </head>
 
 <body>
 
-<div id="recaptcha-container"></div>
-
 <div class="card">
 <h3>Login</h3>
 
-<input id="emailInput" type="email" placeholder="Email">
-<input id="passInput" type="password" placeholder="Password">
+<input id="emailInput" type="email" placeholder="البريد الإلكتروني">
+<input id="passInput" type="password" placeholder="كلمة المرور">
 
-<button onclick="handleEmailLogin()">تسجيل الدخول</button>
-<button onclick="handleGoogleLogin()">Google</button>
+<button onclick="handleLogin()">تسجيل الدخول</button>
+<button onclick="handleGoogle()">Google</button>
 
 <p>ليس لديك حساب؟ <a onclick="handleRegister()">إنشاء حساب</a></p>
 </div>
 
 <script>
-function show(msg){alert(msg)}
+function show(msg){ alert(msg); }
 
-async function handleEmailLogin(){
+async function handleLogin() {
   const email = emailInput.value.trim();
   const pass = passInput.value;
 
-  if(!email || !pass) return show("اكتب البيانات");
+  if (!email || !pass) return show("اكتب البيانات");
 
-  try{
+  try {
     await window.__emailLogin(email, pass);
-  }catch(e){
+  } catch(e) {
     show(e.message);
   }
 }
 
-async function handleRegister(){
+async function handleRegister() {
   const email = emailInput.value.trim();
   const pass = passInput.value;
 
-  if(!email || !pass) return show("اكتب البيانات");
+  if (!email || !pass) return show("اكتب البيانات");
 
-  try{
+  try {
     await window.__register(email, pass);
     show("تم إنشاء الحساب ✅");
-  }catch(e){
+  } catch(e) {
     show(e.message);
   }
 }
 
-async function handleGoogleLogin(){
-  try{
+async function handleGoogle() {
+  try {
     await window.__googleLogin();
-  }catch(e){
+  } catch(e) {
     show(e.message);
   }
 }
