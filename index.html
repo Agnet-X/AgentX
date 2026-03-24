@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>AgentX Login</title>
+<title>AgentX — تسجيل الدخول</title>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
@@ -29,34 +29,73 @@ const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
 onAuthStateChanged(auth, user => {
-  if (user) window.location.href = "index.html";
+  if (user) window.location.href = 'home.html';
 });
 
-window.login = async () => {
-  const email = emailInput.value.trim();
-  const pass  = passInput.value;
+// Email
+window.handleEmailLogin = async () => {
+  const email = document.getElementById('emailInput').value.trim();
+  const pass  = document.getElementById('passInput').value;
+
+  if (!email.includes("@")) {
+    showSnack("اكتب ايميل صح");
+    return;
+  }
 
   try {
     await signInWithEmailAndPassword(auth, email, pass);
   } catch(e) {
-    alert(e.message);
+    showSnack(e.message);
   }
 };
 
-window.googleLogin = async () => {
+// Google
+window.handleGoogleLogin = async () => {
   try {
     await signInWithPopup(auth, provider);
   } catch(e) {
-    alert(e.message);
+    showSnack(e.message);
   }
 };
 </script>
 
 <style>
-body{background:#090910;color:#fff;font-family:sans-serif;display:flex;justify-content:center;align-items:center;height:100vh}
-.card{background:#111;padding:25px;border-radius:20px;width:320px}
-input,button{width:100%;padding:10px;margin-top:10px;border-radius:10px;border:none}
-button{background:#534AB7;color:#fff}
+body {
+  font-family: sans-serif;
+  background:#090910;
+  color:#fff;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+}
+.card{
+  background:#111;
+  padding:30px;
+  border-radius:20px;
+  width:320px;
+}
+input,button{
+  width:100%;
+  padding:12px;
+  margin-top:10px;
+  border-radius:10px;
+  border:none;
+}
+button{
+  background:#534AB7;
+  color:#fff;
+}
+#snack{
+  position:fixed;
+  bottom:20px;
+  left:50%;
+  transform:translateX(-50%);
+  background:#534AB7;
+  padding:10px 20px;
+  border-radius:10px;
+  display:none;
+}
 </style>
 </head>
 
@@ -65,16 +104,28 @@ button{background:#534AB7;color:#fff}
 <div class="card">
 <h2>Login</h2>
 
-<input id="emailInput" placeholder="Email"/>
-<input id="passInput" type="password" placeholder="Password"/>
+<input id="emailInput" placeholder="البريد الإلكتروني"/>
+<input id="passInput" type="password" placeholder="كلمة المرور"/>
 
-<button onclick="login()">Login</button>
-<button onclick="googleLogin()">Google</button>
+<button onclick="handleEmailLogin()">تسجيل الدخول</button>
+
+<button onclick="handleGoogleLogin()">Google</button>
 
 <p style="text-align:center;margin-top:15px">
 ليس لديك حساب؟ <a href="register.html">إنشاء حساب</a>
 </p>
 </div>
+
+<div id="snack"></div>
+
+<script>
+function showSnack(msg){
+  const el = document.getElementById('snack');
+  el.innerText = msg;
+  el.style.display = 'block';
+  setTimeout(()=> el.style.display='none',3000);
+}
+</script>
 
 </body>
 </html>
