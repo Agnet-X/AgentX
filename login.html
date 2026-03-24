@@ -4,12 +4,13 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>AgentX — تسجيل الدخول</title>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;600&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
+    // البيانات دي هي اللي كانت ناقصة في الـ Console عندك
     const firebaseConfig = {
       apiKey: "AIzaSyBMbrB0R0Om0t2kryg4SDhAHoaNSBvFnpc",
       authDomain: "agentx-27ea9.firebaseapp.com",
@@ -23,20 +24,19 @@
     const auth = getAuth(app);
     const provider = new GoogleAuthProvider();
 
-    // منع الرفرش اللانهائي: بنحول بس لو المستخدم مش في صفحة الـ index فعلياً
+    // منع الرفرش اللانهائي والتحويل التلقائي
     onAuthStateChanged(auth, user => {
       if (user && !window.location.pathname.includes('index.html')) {
         window.location.replace('index.html');
       }
     });
 
-    window.handleAuth = async (e) => {
-      if(e) e.preventDefault();
+    window.handleAuth = async () => {
       const email = document.getElementById('emailInput').value.trim();
       const pass = document.getElementById('passInput').value;
       const btn = document.getElementById('mainBtn');
 
-      if (!email || !pass) { showSnack('اكتب بياناتك يا بطل'); return; }
+      if (!email || !pass) { showSnack('اكتب البيانات الأول'); return; }
       btn.disabled = true;
       btn.innerHTML = '<span class="spinner"></span>';
 
@@ -46,8 +46,9 @@
         } else {
           await signInWithEmailAndPassword(auth, email, pass);
         }
-      } catch (error) {
-        showSnack('فيه مشكلة في البيانات، راجعها تاني');
+      } catch (e) {
+        console.error(e);
+        showSnack('فشل الإجراء، تحقق من البيانات');
         btn.disabled = false;
         btn.textContent = window.isRegisterMode ? 'إنشاء حساب جديد' : 'تسجيل الدخول';
       }
@@ -57,70 +58,53 @@
   </script>
 
   <style>
-    /* رجعنا الألوان بتاعتك بالظبط */
-    :root { --bg: #090910; --purple: #534AB7; --text: #f0f0f0; --border: rgba(83,74,183,0.3); }
-    body { background: var(--bg); color: var(--text); font-family: 'IBM Plex Sans Arabic', sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; overflow: hidden; }
-    
-    .card { 
-      background: #0f0f18; border: 1px solid var(--border); border-radius: 24px; 
-      padding: 35px; width: 100%; max-width: 380px; text-align: center;
-      box-shadow: 0 20px 50px rgba(0,0,0,0.5); animation: cardIn 0.8s ease-out;
+    :root {
+      --bg: #090910; --bg2: #0f0f18; --purple: #534AB7; --purpleL: #7F77DD;
+      --border: rgba(83,74,183,0.25); --text: #f0f0f0; --muted: rgba(255,255,255,0.35);
     }
-    @keyframes cardIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-
-    .logo-wrap { margin-bottom: 25px; }
-    .bolt { font-size: 50px; margin-bottom: 10px; filter: drop-shadow(0 0 10px var(--purple)); }
-    .logo-title { font-family: 'Space Grotesk'; font-size: 1.6rem; letter-spacing: 3px; font-weight: 700; }
-    .logo-sub { font-size: 0.8rem; color: var(--purple); letter-spacing: 2px; }
-
-    input { 
-      width: 100%; padding: 14px; margin: 10px 0; background: rgba(255,255,255,0.05); 
-      border: 1px solid var(--border); border-radius: 12px; color: white; text-align: center; outline: none; 
-    }
-    .btn-main { width: 100%; padding: 14px; background: var(--purple); border: none; border-radius: 12px; color: white; font-weight: 600; cursor: pointer; margin-top: 15px; }
-    .btn-google { width: 100%; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid #333; border-radius: 12px; color: #ccc; margin-top: 10px; cursor: pointer; }
-    
-    .toggle { margin-top: 20px; font-size: 0.85rem; color: #666; cursor: pointer; }
-    .toggle span { color: var(--purple); }
-    #snack { position: fixed; bottom: 20px; background: var(--purple); padding: 12px 25px; border-radius: 10px; display: none; animation: slideUp 0.3s; }
-    @keyframes slideUp { from { transform: translateY(50px); } to { transform: translateY(0); } }
-    .spinner { display: inline-block; width: 20px; height: 20px; border: 3px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.8s linear infinite; }
+    body { font-family: 'IBM Plex Sans Arabic'; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; align-items: center; justify-content: center; overflow: hidden; margin: 0; }
+    .orb { position: fixed; border-radius: 50%; filter: blur(60px); pointer-events: none; }
+    .orb-1 { width: 300px; height: 300px; background: rgba(83,74,183,0.2); top: -100px; right: -50px; }
+    .card { background: var(--bg2); border: 1px solid var(--border); border-radius: 24px; padding: 32px; width: 380px; text-align: center; z-index: 10; }
+    .logo-title { font-family: 'Space Grotesk'; font-size: 1.5rem; letter-spacing: 3px; margin-top: 10px; }
+    input { width: 100%; padding: 12px; margin: 10px 0; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 12px; color: white; text-align: center; outline: none; }
+    .btn-main { width: 100%; padding: 13px; background: var(--purple); border: none; border-radius: 12px; color: white; font-weight: 600; cursor: pointer; margin-top: 10px; }
+    .btn-social { width: 100%; padding: 11px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: #ccc; margin-top: 10px; cursor: pointer; }
+    .spinner { display: inline-block; width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.8s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
+    #snack { position: fixed; bottom: 20px; background: var(--purple); padding: 10px 20px; border-radius: 10px; display: none; }
   </style>
 </head>
 <body>
-
-<div class="card">
-  <div class="logo-wrap">
-    <div class="bolt">⚡</div>
+  <div class="orb orb-1"></div>
+  <div class="card">
+    <svg width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="white"/></svg>
     <div class="logo-title">WELCOME</div>
-    <div class="logo-sub">AgentX.Ai</div>
+    <div style="color:var(--purple); font-size: 0.8rem; margin-bottom: 20px;">AgentX.Ai</div>
+    
+    <input type="email" id="emailInput" placeholder="البريد الإلكتروني">
+    <input type="password" id="passInput" placeholder="كلمة المرور">
+    <button class="btn-main" id="mainBtn" onclick="handleAuth()">تسجيل الدخول</button>
+    <button class="btn-social" onclick="handleGoogle()">Google دخول بـ</button>
+
+    <div style="margin-top:20px; font-size:0.8rem; color:#666; cursor:pointer;" onclick="switchMode()">
+      <span id="toggleMode">ليس لديك حساب؟ إنشاء حساب</span>
+    </div>
   </div>
+  <div id="snack"></div>
 
-  <form onsubmit="handleAuth(event)">
-    <input type="email" id="emailInput" placeholder="البريد الإلكتروني" required>
-    <input type="password" id="passInput" placeholder="كلمة المرور" required>
-    <button type="submit" class="btn-main" id="mainBtn">تسجيل الدخول</button>
-  </form>
-
-  <button class="btn-google" onclick="handleGoogle()">المتابعة بـ Google</button>
-  <div class="toggle" onclick="switchMode()"><span id="modeTxt">ليس لديك حساب؟ إنشاء حساب</span></div>
-</div>
-
-<div id="snack"></div>
-
-<script>
-  window.isRegisterMode = false;
-  function switchMode() {
-    window.isRegisterMode = !window.isRegisterMode;
-    document.getElementById('mainBtn').textContent = window.isRegisterMode ? 'إنشاء حساب جديد' : 'تسجيل الدخول';
-    document.getElementById('modeTxt').textContent = window.isRegisterMode ? 'لديك حساب بالفعل؟ سجل دخول' : 'ليس لديك حساب؟ إنشاء حساب';
-  }
-  function showSnack(m) {
-    const s = document.getElementById('snack');
-    s.textContent = m; s.style.display = 'block';
-    setTimeout(() => s.style.display = 'none', 3000);
-  }
-</script>
+  <script>
+    window.isRegisterMode = false;
+    function switchMode() {
+      window.isRegisterMode = !window.isRegisterMode;
+      document.getElementById('mainBtn').textContent = window.isRegisterMode ? 'إنشاء حساب جديد' : 'تسجيل الدخول';
+      document.getElementById('toggleMode').textContent = window.isRegisterMode ? 'لديك حساب؟ سجل دخول' : 'ليس لديك حساب؟ إنشاء حساب';
+    }
+    function showSnack(m) {
+      const s = document.getElementById('snack');
+      s.textContent = m; s.style.display = 'block';
+      setTimeout(() => s.style.display = 'none', 3000);
+    }
+  </script>
 </body>
 </html>
