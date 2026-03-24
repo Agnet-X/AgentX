@@ -1,25 +1,13 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>AgentX — تسجيل الدخول</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
-
+  <meta charset="UTF-8">
+  <title>AgentX — الرئيسية</title>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import {
-      getAuth,
-      signInWithEmailAndPassword,
-      createUserWithEmailAndPassword,
-      signInWithPopup,
-      GoogleAuthProvider,
-      onAuthStateChanged
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-  const firebaseConfig = {
+    const firebaseConfig = {
       apiKey: "AIzaSyBMbrB0R0Om0t2kryg4SDhAHoaNSBvFnpc",
       authDomain: "agentx-27ea9.firebaseapp.com",
       projectId: "agentx-27ea9",
@@ -28,198 +16,29 @@
       appId: "1:244685077463:web:affd6ce25ea0bdbd1a2992"
     };
 
-    const app      = initializeApp(firebaseConfig);
-    const auth     = getAuth(app);
-    const provider = new GoogleAuthProvider();
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
 
-    // الحل لمشكلة الرفرش: التحقق من الصفحة الحالية قبل التحويل
- onAuthStateChanged(auth, user => {
-  // لو المستخدم سجل دخول، ابعته لـ index.html "مرة واحدة بس"
-  if (user) {
-    // بنسأل المتصفح: هل أنا فعلاً في صفحة غير index.html؟
-    if (!window.location.pathname.includes('index.html')) {
-      window.location.replace('index.html');
-    }
-  }
-});
+    // التحقق من الهوية: لو مش مسجل، اطرده لصفحة اللوجن
+    onAuthStateChanged(auth, user => {
+      if (!user) {
+        window.location.replace('login.html');
+      } else {
+        document.getElementById('userMail').textContent = user.email;
+        document.body.style.display = 'block'; // اظهر الصفحة بس لما نتأكد إنه مسجل
+      }
+    });
 
-    window.__emailLogin = (email, pass) => signInWithEmailAndPassword(auth, email, pass);
-    window.__emailRegister = (email, pass) => createUserWithEmailAndPassword(auth, email, pass);
-    window.__googleLogin = () => signInWithPopup(auth, provider);
+    window.logout = () => signOut(auth);
   </script>
-
   <style>
-    :root {
-      --bg: #090910; --bg2: #0f0f18; --bg3: #14141f;
-      --purple: #534AB7; --purpleL: #7F77DD; --purpleLL: #C8B8FF;
-      --border: rgba(83,74,183,0.25); --border2: rgba(255,255,255,0.07);
-      --text: #f0f0f0; --muted: rgba(255,255,255,0.35); --w10: rgba(255,255,255,0.06);
-    }
-    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
-    body {
-      font-family: 'IBM Plex Sans Arabic', sans-serif;
-      background: var(--bg); color: var(--text);
-      min-height: 100dvh; display:flex; align-items:center; justify-content:center;
-      overflow:hidden; position:relative;
-    }
-    .orb { position:fixed; border-radius:50%; pointer-events:none; filter:blur(60px); }
-    .orb-1 { width:320px;height:320px;background:rgba(83,74,183,0.22);top:-100px;right:-80px; }
-    .orb-2 { width:220px;height:220px;background:rgba(29,158,117,0.11);bottom:10px;left:-60px; }
-    #flash {
-      position:fixed;inset:0;background:var(--purpleLL);
-      opacity:0;pointer-events:none;z-index:0;
-      animation:flashLoop 3.5s ease-in-out infinite;
-    }
-    @keyframes flashLoop { 0%,8%,100%{opacity:0;} 9%{opacity:0.05;} 10%{opacity:0.02;} 15%{opacity:0.04;} 16%{opacity:0;} }
-    .card {
-      position:relative;z-index:1;width:100%;max-width:380px;
-      background:var(--bg2);border:1px solid var(--border);border-radius:24px;
-      padding:32px 28px 28px; box-shadow:0 0 60px rgba(83,74,183,0.08),0 24px 48px rgba(0,0,0,0.5);
-      animation:cardIn 0.9s cubic-bezier(.22,1,.36,1) both;
-    }
-    @keyframes cardIn { from{opacity:0;transform:translateY(24px) scale(0.97);} to{opacity:1;transform:translateY(0) scale(1);} }
-    .logo-wrap{display:flex;flex-direction:column;align-items:center;gap:8px;margin-bottom:24px;}
-    .bolt-svg{animation:boltGlow 3.5s ease-in-out infinite;}
-    @keyframes boltGlow { 0%,100%{filter:drop-shadow(0 0 0 rgba(200,184,255,0));} 9%{filter:drop-shadow(0 0 12px rgba(200,184,255,0.7));} }
-    .logo-title{font-family:'Space Grotesk',sans-serif;font-size:1.4rem;font-weight:700;letter-spacing:3px;color:#fff;}
-    .logo-sub{font-size:0.75rem;font-weight:500;letter-spacing:2px;background:linear-gradient(90deg,var(--purple),var(--purpleLL),#fff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:shimmer 3s linear infinite;background-size:200%;}
-    @keyframes shimmer{to{background-position:-200% center;}}
-    .field-wrap{position:relative;margin-bottom:10px;}
-    .field-icon{position:absolute;top:50%;transform:translateY(-50%);right:14px;color:var(--muted);pointer-events:none;display:flex;}
-    .field-suffix{position:absolute;top:50%;transform:translateY(-50%);left:12px;cursor:pointer;color:var(--muted);background:none;border:none;display:flex;padding:4px;}
-    input {
-      width:100%;background:var(--w10);border:0.5px solid var(--border);border-radius:12px;
-      padding:13px 42px 13px 16px;color:#fff;font-family:inherit;font-size:0.88rem;
-      text-align:right;outline:none;transition:0.25s;
-    }
-    input:focus{border-color:var(--purpleL);box-shadow:0 0 0 3px rgba(83,74,183,0.12);}
-    .btn-primary{
-      width:100%;padding:13px;background:var(--purple);border:none;border-radius:12px;
-      color:#fff;font-family:inherit;font-size:0.93rem;font-weight:600;cursor:pointer;margin-top:6px;
-    }
-    .btn-primary:hover{background:var(--purpleL);transform:translateY(-1px);}
-    .btn-primary:disabled{opacity:0.5;cursor:not-allowed;}
-    .divider{display:flex;align-items:center;gap:12px;margin:16px 0;}
-    .divider hr{flex:1;border:none;border-top:1px solid var(--border2);}
-    .divider span{color:var(--muted);font-size:0.75rem;}
-    .btn-social{
-      width:100%;padding:11px;background:var(--w10);border:0.5px solid var(--border2);border-radius:12px;
-      color:rgba(255,255,255,0.7);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;
-    }
-    .register-row{text-align:center;margin-top:18px;font-size:0.78rem;color:var(--muted);}
-    .register-row a{color:var(--purpleL);text-decoration:none;cursor:pointer;}
-    .spinner{display:inline-block;width:18px;height:18px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite;}
-    @keyframes spin{to{transform:rotate(360deg);}}
-    #snack{
-      position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);
-      background:var(--purple);color:#fff;padding:10px 20px;border-radius:12px;transition:0.35s;z-index:999;
-    }
-    #snack.show{transform:translateX(-50%) translateY(0);}
+    body { background: #090910; color: white; font-family: sans-serif; display:none; text-align:center; padding-top: 50px; }
+    button { padding: 10px 20px; background: red; color: white; border: none; border-radius: 5px; cursor: pointer; }
   </style>
 </head>
 <body>
-
-<div class="orb orb-1"></div>
-<div class="orb orb-2"></div>
-<div id="flash"></div>
-
-<div class="card">
-  <div class="logo-wrap">
-    <svg class="bolt-svg" width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
-      <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="white"/>
-    </svg>
-    <div class="logo-title">WELCOME</div>
-    <div class="logo-sub">AgentX.Ai</div>
-  </div>
-
-  <div class="field-wrap">
-    <span class="field-icon">📧</span>
-    <input type="email" id="emailInput" placeholder="البريد الإلكتروني"/>
-  </div>
-
-  <div class="field-wrap">
-    <span class="field-icon">🔒</span>
-    <input type="password" id="passInput" placeholder="كلمة المرور"/>
-    <button class="field-suffix" onclick="togglePass()" type="button">👁️</button>
-  </div>
-
-  <button class="btn-primary" id="mainBtn" onclick="handleAuth()">تسجيل الدخول</button>
-
-  <div class="divider"><hr/><span>أو</span><hr/></div>
-
-  <button class="btn-social" onclick="handleGoogleLogin()">
-    المتابعة بـ Google
-  </button>
-
-  <div class="register-row" id="toggleRow">
-    ليس لديك حساب؟ <a onclick="toggleMode(true)">إنشاء حساب</a>
-  </div>
-</div>
-
-<div id="snack"></div>
-
-<script>
-  let isRegisterMode = false;
-  let passVisible = false;
-
-  function toggleMode(toRegister) {
-    isRegisterMode = toRegister;
-    const btn = document.getElementById('mainBtn');
-    const row = document.getElementById('toggleRow');
-    btn.textContent = isRegisterMode ? 'إنشاء حساب جديد' : 'تسجيل الدخول';
-    row.innerHTML = isRegisterMode ? 
-      'لديك حساب بالفعل؟ <a onclick="toggleMode(false)">تسجيل الدخول</a>' : 
-      'ليس لديك حساب؟ <a onclick="toggleMode(true)">إنشاء حساب</a>';
-  }
-
-  function togglePass() {
-    passVisible = !passVisible;
-    document.getElementById('passInput').type = passVisible ? 'text' : 'password';
-  }
-
-  function showSnack(msg) {
-    const el = document.getElementById('snack');
-    el.textContent = msg;
-    el.classList.add('show');
-    setTimeout(() => el.classList.remove('show'), 3500);
-  }
-
-  async function handleAuth() {
-    const email = document.getElementById('emailInput').value.trim();
-    const pass  = document.getElementById('passInput').value;
-    if (!email || !pass) { showSnack('يرجى إدخال البيانات'); return; }
-
-    const btn = document.getElementById('mainBtn');
-    btn.disabled = true;
-    btn.innerHTML = '<span class="spinner"></span>';
-
-    try {
-      if (isRegisterMode) {
-        await window.__emailRegister(email, pass);
-        showSnack('تم إنشاء الحساب بنجاح! جاري التحويل...');
-        setTimeout(() => window.location.href = 'index.html', 1500);
-      } else {
-        await window.__emailLogin(email, pass);
-        window.location.href = 'index.html';
-      }
-    } catch(e) {
-      console.error(e);
-      let errorMsg = 'فشل الإجراء، تحقق من البيانات';
-      if (e.code === 'auth/email-already-in-use') errorMsg = 'البريد مسجل بالفعل';
-      if (e.code === 'auth/weak-password') errorMsg = 'كلمة المرور ضعيفة جداً';
-      showSnack(errorMsg);
-      btn.disabled = false;
-      btn.textContent = isRegisterMode ? 'إنشاء حساب جديد' : 'تسجيل الدخول';
-    }
-  }
-
-  async function handleGoogleLogin() {
-    try {
-      await window.__googleLogin();
-    } catch(e) {
-      if (e.code !== 'auth/popup-closed-by-user') showSnack('خطأ في تسجيل جوجل');
-    }
-  }
-</script>
+  <h1>أهلاً بك في AgentX</h1>
+  <p>مسجل دخول بـ: <span id="userMail"></span></p>
+  <button onclick="logout()">تسجيل خروج</button>
 </body>
 </html>
