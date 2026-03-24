@@ -1,133 +1,65 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>إنشاء حساب</title>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Register</title>
 
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic&display=swap" rel="stylesheet">
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+import {
+  getAuth,
+  createUserWithEmailAndPassword
+} from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import {
-      getAuth,
-      createUserWithEmailAndPassword
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+const firebaseConfig = {
+  apiKey: "AIzaSyBMbrB0R0Om0t2kryg4SDhAHoaNSBvFnpc",
+  authDomain: "agentx-27ea9.firebaseapp.com",
+  projectId: "agentx-27ea9",
+  storageBucket: "agentx-27ea9.firebasestorage.app",
+  messagingSenderId: "244685077463",
+  appId: "1:244685077463:web:affd6ce25ea0bdbd1a2992"
+};
 
-    const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_AUTH_DOMAIN",
-      projectId: "YOUR_PROJECT_ID",
-      appId: "YOUR_APP_ID"
-    };
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
+window.register = async () => {
+  const email = emailInput.value.trim();
+  const pass  = passInput.value;
 
-    window.__register = (email, pass) =>
-      createUserWithEmailAndPassword(auth, email, pass);
-  </script>
+  try {
+    await createUserWithEmailAndPassword(auth, email, pass);
+    alert("تم إنشاء الحساب ✅");
+    window.location.href = "index.html";
+  } catch(e) {
+    alert(e.message);
+  }
+};
+</script>
 
-  <style>
-    body {
-      font-family: 'IBM Plex Sans Arabic', sans-serif;
-      background:#090910;
-      color:#fff;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      height:100vh;
-    }
-
-    .card {
-      width:100%;
-      max-width:360px;
-      background:#111;
-      padding:25px;
-      border-radius:20px;
-      box-shadow:0 10px 40px rgba(0,0,0,0.5);
-    }
-
-    h2 { text-align:center; margin-bottom:20px; }
-
-    input {
-      width:100%;
-      padding:12px;
-      margin-bottom:10px;
-      border-radius:10px;
-      border:none;
-      background:#1b1b2b;
-      color:#fff;
-    }
-
-    button {
-      width:100%;
-      padding:12px;
-      border:none;
-      border-radius:10px;
-      background:#534AB7;
-      color:#fff;
-      cursor:pointer;
-    }
-
-    .login {
-      text-align:center;
-      margin-top:15px;
-      color:#888;
-    }
-
-    .login a {
-      color:#C8B8FF;
-      text-decoration:none;
-    }
-  </style>
+<style>
+body{background:#090910;color:#fff;font-family:sans-serif;display:flex;justify-content:center;align-items:center;height:100vh}
+.card{background:#111;padding:25px;border-radius:20px;width:320px}
+input,button{width:100%;padding:10px;margin-top:10px;border-radius:10px;border:none}
+button{background:#534AB7;color:#fff}
+</style>
 </head>
 
 <body>
 
 <div class="card">
-  <h2>إنشاء حساب</h2>
+<h2>Register</h2>
 
-  <input type="email" id="email" placeholder="البريد الإلكتروني"/>
-  <input type="password" id="pass" placeholder="كلمة المرور"/>
+<input id="emailInput" placeholder="Email"/>
+<input id="passInput" type="password" placeholder="Password"/>
 
-  <button onclick="register()">إنشاء الحساب</button>
+<button onclick="register()">إنشاء الحساب</button>
 
-  <div class="login">
-    لديك حساب؟ <a href="index.html">تسجيل الدخول</a>
-  </div>
+<p style="text-align:center;margin-top:15px">
+عندك حساب؟ <a href="index.html">تسجيل الدخول</a>
+</p>
 </div>
-
-<script>
-  function show(msg){ alert(msg); }
-
-  function translateError(code){
-    const map = {
-      'auth/email-already-in-use': 'الإيميل مستخدم بالفعل',
-      'auth/weak-password': 'كلمة المرور ضعيفة (6 أحرف على الأقل)',
-      'auth/invalid-email': 'بريد غير صالح'
-    };
-    return map[code] || 'حدث خطأ';
-  }
-
-  async function register(){
-    const email = document.getElementById('email').value.trim();
-    const pass  = document.getElementById('pass').value;
-
-    if(!email || !pass){
-      show("اكتب كل البيانات");
-      return;
-    }
-
-    try{
-      await window.__register(email, pass);
-      show("تم إنشاء الحساب ✅");
-      window.location.href = "index.html";
-    }catch(e){
-      show(translateError(e.code));
-    }
-  }
-</script>
 
 </body>
 </html>
