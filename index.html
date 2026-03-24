@@ -1,197 +1,80 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>AgentX — تسجيل الدخول</title>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AgentX Login</title>
 
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  signInWithPopup,
+  GoogleAuthProvider,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import {
-      getAuth,
-      signInWithEmailAndPassword,
-      signInWithPopup,
-      GoogleAuthProvider,
-      onAuthStateChanged
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+const firebaseConfig = {
+  apiKey: "AIzaSyBMbrB0R0Om0t2kryg4SDhAHoaNSBvFnpc",
+  authDomain: "agentx-27ea9.firebaseapp.com",
+  projectId: "agentx-27ea9",
+  storageBucket: "agentx-27ea9.firebasestorage.app",
+  messagingSenderId: "244685077463",
+  appId: "1:244685077463:web:affd6ce25ea0bdbd1a2992"
+};
 
-    const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_AUTH_DOMAIN",
-      projectId: "YOUR_PROJECT_ID",
-      appId: "YOUR_APP_ID"
-    };
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const provider = new GoogleAuthProvider();
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const provider = new GoogleAuthProvider();
+onAuthStateChanged(auth, user => {
+  if (user) window.location.href = "index.html";
+});
 
-    onAuthStateChanged(auth, user => {
-      if (user) window.location.href = 'index.html';
-    });
+window.login = async () => {
+  const email = emailInput.value.trim();
+  const pass  = passInput.value;
 
-    window.__emailLogin = (email, pass) =>
-      signInWithEmailAndPassword(auth, email, pass);
+  try {
+    await signInWithEmailAndPassword(auth, email, pass);
+  } catch(e) {
+    alert(e.message);
+  }
+};
 
-    window.__googleLogin = () =>
-      signInWithPopup(auth, provider);
-  </script>
+window.googleLogin = async () => {
+  try {
+    await signInWithPopup(auth, provider);
+  } catch(e) {
+    alert(e.message);
+  }
+};
+</script>
 
-  <style>
-    body {
-      font-family: 'IBM Plex Sans Arabic', sans-serif;
-      background:#090910;
-      color:#fff;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      height:100vh;
-    }
-
-    .card {
-      width:100%;
-      max-width:360px;
-      background:#111;
-      padding:25px;
-      border-radius:20px;
-      box-shadow:0 10px 40px rgba(0,0,0,0.5);
-    }
-
-    h2 {
-      text-align:center;
-      margin-bottom:20px;
-    }
-
-    input {
-      width:100%;
-      padding:12px;
-      margin-bottom:10px;
-      border-radius:10px;
-      border:none;
-      background:#1b1b2b;
-      color:#fff;
-      font-size:14px;
-    }
-
-    input:focus {
-      outline:none;
-      box-shadow:0 0 0 2px #534AB7;
-    }
-
-    button {
-      width:100%;
-      padding:12px;
-      border:none;
-      border-radius:10px;
-      cursor:pointer;
-      margin-top:5px;
-      font-size:14px;
-    }
-
-    .primary {
-      background:#534AB7;
-      color:#fff;
-      font-weight:bold;
-    }
-
-    .primary:disabled {
-      opacity:0.4;
-      cursor:not-allowed;
-    }
-
-    .social {
-      background:#222;
-      color:#fff;
-      margin-top:10px;
-    }
-
-    .register {
-      text-align:center;
-      margin-top:18px;
-      font-size:13px;
-      color:#888;
-    }
-
-    .register a {
-      color:#C8B8FF;
-      text-decoration:none;
-      font-weight:500;
-    }
-
-    .register a:hover {
-      color:#fff;
-    }
-  </style>
+<style>
+body{background:#090910;color:#fff;font-family:sans-serif;display:flex;justify-content:center;align-items:center;height:100vh}
+.card{background:#111;padding:25px;border-radius:20px;width:320px}
+input,button{width:100%;padding:10px;margin-top:10px;border-radius:10px;border:none}
+button{background:#534AB7;color:#fff}
+</style>
 </head>
 
 <body>
 
 <div class="card">
-  <h2>AgentX</h2>
+<h2>Login</h2>
 
-  <input type="email" id="emailInput" placeholder="البريد الإلكتروني"/>
-  <input type="password" id="passInput" placeholder="كلمة المرور"/>
+<input id="emailInput" placeholder="Email"/>
+<input id="passInput" type="password" placeholder="Password"/>
 
-  <button class="primary" id="loginBtn" onclick="handleEmailLogin()" disabled>
-    تسجيل الدخول
-  </button>
+<button onclick="login()">Login</button>
+<button onclick="googleLogin()">Google</button>
 
-  <button class="social" onclick="handleGoogleLogin()">
-    المتابعة بـ Google
-  </button>
-
-  <!-- رجعناها 👇 -->
-  <div class="register">
-    ليس لديك حساب؟
-    <a href="register.html">إنشاء حساب</a>
-  </div>
+<p style="text-align:center;margin-top:15px">
+ليس لديك حساب؟ <a href="register.html">إنشاء حساب</a>
+</p>
 </div>
-
-<script>
-  function show(msg){ alert(msg); }
-
-  function translateError(code) {
-    const map = {
-      'auth/user-not-found': 'البريد غير مسجل',
-      'auth/wrong-password': 'كلمة المرور غير صحيحة',
-      'auth/invalid-email': 'بريد غير صالح'
-    };
-    return map[code] || 'حدث خطأ';
-  }
-
-  async function handleEmailLogin() {
-    const email = emailInput.value.trim();
-    const pass  = passInput.value;
-
-    if(!email || !pass){
-      show("اكتب البيانات كاملة");
-      return;
-    }
-
-    try {
-      await window.__emailLogin(email, pass);
-    } catch(e) {
-      show(translateError(e.code));
-    }
-  }
-
-  async function handleGoogleLogin() {
-    try {
-      await window.__googleLogin();
-    } catch(e) {
-      show('خطأ في تسجيل Google');
-    }
-  }
-
-  emailInput.addEventListener('input', check);
-  passInput.addEventListener('input', check);
-
-  function check() {
-    loginBtn.disabled = !(emailInput.value && passInput.value);
-  }
-</script>
 
 </body>
 </html>
