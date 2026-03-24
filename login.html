@@ -4,7 +4,7 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>AgentX — الدخول</title>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;600&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -30,25 +30,24 @@
     const auth = getAuth(app);
     const provider = new GoogleAuthProvider();
 
-    // مراقب حالة الدخول
-    onAuthStateChanged(auth, (user) => {
+    // أهم جزء: لو المستخدم مسجل دخول "فعلاً" حوله لـ index وشكراً
+    onAuthStateChanged(auth, user => {
       if (user) {
-        // التحويل باستخدام replace لمنع العودة للخلف والرفرش اللانهائي
         window.location.replace('index.html');
       }
     });
 
+    // تعريف الدوال في الـ window عشان الـ HTML يشوفها
     window.handleAuth = async (e) => {
-      if(e) e.preventDefault(); // السطر ده هو اللي هيمنع الريفرش اللحظي
-      
+      if(e) e.preventDefault(); 
       const email = document.getElementById('emailInput').value.trim();
       const pass = document.getElementById('passInput').value;
       const btn = document.getElementById('mainBtn');
 
-      if (!email || !pass) { alert('اكتب البيانات الأول'); return; }
+      if (!email || !pass) { showSnack('اكتب البيانات الأول'); return; }
       
       btn.disabled = true;
-      btn.textContent = 'جاري التحقق...';
+      btn.innerHTML = '<span class="spinner"></span>';
 
       try {
         if (window.isRegisterMode) {
@@ -56,52 +55,64 @@
         } else {
           await signInWithEmailAndPassword(auth, email, pass);
         }
+        // التحويل هيحصل تلقائياً عن طريق onAuthStateChanged
       } catch (error) {
-        console.error("Firebase Error:", error.code);
-        alert('خطأ: ' + error.message);
+        console.error(error);
+        showSnack('خطأ: تأكد من البيانات');
         btn.disabled = false;
-        btn.textContent = window.isRegisterMode ? 'إنشاء حساب' : 'دخول';
+        btn.textContent = window.isRegisterMode ? 'إنشاء حساب جديد' : 'تسجيل الدخول';
       }
     };
 
     window.handleGoogle = async () => {
       try { await signInWithPopup(auth, provider); }
-      catch (e) { console.error(e); }
+      catch (e) { showSnack('فشل تسجيل جوجل'); }
     };
   </script>
 
   <style>
-    :root { --bg: #090910; --purple: #534AB7; --text: #f0f0f0; }
-    body { background: var(--bg); color: var(--text); font-family: 'IBM Plex Sans Arabic', sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
-    .card { background: #0f0f18; border: 1px solid rgba(83,74,183,0.3); padding: 30px; border-radius: 20px; width: 100%; max-width: 350px; text-align: center; }
-    input { width: 100%; padding: 12px; margin: 8px 0; background: rgba(255,255,255,0.05); border: 1px solid #333; border-radius: 10px; color: white; outline: none; text-align: center; }
-    button { width: 100%; padding: 12px; border-radius: 10px; border: none; cursor: pointer; font-weight: 600; margin-top: 10px; }
-    .btn-main { background: var(--purple); color: white; }
-    .btn-google { background: #fff; color: #000; }
-    .toggle { font-size: 13px; margin-top: 15px; color: #888; cursor: pointer; }
+    :root { --bg: #090910; --bg2: #0f0f18; --purple: #534AB7; --text: #f0f0f0; --border: rgba(83,74,183,0.25); }
+    body { font-family: 'IBM Plex Sans Arabic', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; align-items: center; justify-content: center; margin: 0; overflow: hidden; }
+    .card { background: var(--bg2); border: 1px solid var(--border); border-radius: 24px; padding: 32px; width: 100%; max-width: 380px; text-align: center; box-shadow: 0 24px 48px rgba(0,0,0,0.5); }
+    .logo-title { font-family: 'Space Grotesk'; font-size: 1.5rem; letter-spacing: 2px; margin-bottom: 20px; }
+    input { width: 100%; padding: 13px; margin: 10px 0; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 12px; color: #fff; text-align: right; outline: none; }
+    .btn-primary { width: 100%; padding: 13px; background: var(--purple); border: none; border-radius: 12px; color: #fff; font-weight: 600; cursor: pointer; margin-top: 10px; }
+    .btn-social { width: 100%; padding: 11px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: #ccc; cursor: pointer; margin-top: 10px; }
+    .spinner { display: inline-block; width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #snack { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #534AB7; padding: 10px 20px; border-radius: 10px; display: none; }
+    .toggle { font-size: 0.8rem; color: #888; margin-top: 15px; cursor: pointer; }
+    .toggle span { color: var(--purple); }
   </style>
 </head>
 <body>
 
 <div class="card">
-  <h2 style="font-family:'Space Grotesk'">AgentX</h2>
-  <form onsubmit="handleAuth(event)"> <input type="email" id="emailInput" placeholder="الايميل" required>
-    <input type="password" id="passInput" placeholder="الباسورد" required>
-    <button type="submit" class="btn-main" id="mainBtn">دخول</button>
+  <div class="logo-title">AGENTX</div>
+  <form onsubmit="handleAuth(event)">
+    <input type="email" id="emailInput" placeholder="البريد الإلكتروني" required>
+    <input type="password" id="passInput" placeholder="كلمة المرور" required>
+    <button type="submit" class="btn-primary" id="mainBtn">تسجيل الدخول</button>
   </form>
   
-  <button class="btn-google" onclick="handleGoogle()">Google دخول بـ</button>
-  <div class="toggle" id="toggleMode" onclick="switchMode()">ليس لديك حساب؟ إنشاء حساب</div>
+  <button class="btn-social" onclick="handleGoogle()">المتابعة بـ Google</button>
+  <div class="toggle" onclick="switchMode()"><span id="toggleTxt">ليس لديك حساب؟ إنشاء حساب</span></div>
 </div>
+
+<div id="snack"></div>
 
 <script>
   window.isRegisterMode = false;
   function switchMode() {
     window.isRegisterMode = !window.isRegisterMode;
-    document.getElementById('mainBtn').textContent = window.isRegisterMode ? 'إنشاء حساب' : 'دخول';
-    document.getElementById('toggleMode').textContent = window.isRegisterMode ? 'لديك حساب؟ سجل دخول' : 'ليس لديك حساب؟ إنشاء حساب';
+    document.getElementById('mainBtn').textContent = window.isRegisterMode ? 'إنشاء حساب جديد' : 'تسجيل الدخول';
+    document.getElementById('toggleTxt').textContent = window.isRegisterMode ? 'لديك حساب؟ سجل دخول' : 'ليس لديك حساب؟ إنشاء حساب';
+  }
+  function showSnack(m) {
+    const s = document.getElementById('snack');
+    s.textContent = m; s.style.display = 'block';
+    setTimeout(() => s.style.display = 'none', 3000);
   }
 </script>
-
 </body>
 </html>
