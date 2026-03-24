@@ -34,11 +34,13 @@
     const provider = new GoogleAuthProvider();
 
     // الحل لمشكلة الرفرش: التحقق من الصفحة الحالية قبل التحويل
-  onAuthStateChanged(auth, user => {
+ onAuthStateChanged(auth, user => {
+  // لو المستخدم سجل دخول، ابعته لـ index.html "مرة واحدة بس"
   if (user) {
-    // لو المستخدم مسجل دخول، ابعته لصفحة index.html
-    // استخدمنا replace عشان ميرجعش لورا تاني لما يدوس Back
-    window.location.replace('index.html');
+    // بنسأل المتصفح: هل أنا فعلاً في صفحة غير index.html؟
+    if (!window.location.pathname.includes('index.html')) {
+      window.location.replace('index.html');
+    }
   }
 });
 
