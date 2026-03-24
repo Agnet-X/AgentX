@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>AgentX — الرئيسية</title>
+  
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyBMbrB0R0Om0t2kryg4SDhAHoaNSBvFnpc",
@@ -19,26 +21,26 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
 
-    // التحقق من الهوية: لو مش مسجل، اطرده لصفحة اللوجن
+    // التحقق من الهوية فوراً
     onAuthStateChanged(auth, user => {
       if (!user) {
+        // لو مش مسجل، يرجع لصفحة اللوجن (تأكد إن اسمها login.html)
         window.location.replace('login.html');
       } else {
-        document.getElementById('userMail').textContent = user.email;
-        document.body.style.display = 'block'; // اظهر الصفحة بس لما نتأكد إنه مسجل
+        // لو مسجل، اظهر محتوى الصفحة
+        document.body.style.opacity = "1";
+        console.log("Welcome:", user.email);
       }
     });
-
-    window.logout = () => signOut(auth);
   </script>
+
   <style>
-    body { background: #090910; color: white; font-family: sans-serif; display:none; text-align:center; padding-top: 50px; }
-    button { padding: 10px 20px; background: red; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    /* بنخفي الصفحة لحظياً لحد ما Firebase يتأكد من اليوزر عشان نمنع الـ Flash */
+    body { opacity: 0; transition: opacity 0.5s; background: #090910; color: white; }
   </style>
 </head>
 <body>
-  <h1>أهلاً بك في AgentX</h1>
-  <p>مسجل دخول بـ: <span id="userMail"></span></p>
-  <button onclick="logout()">تسجيل خروج</button>
+  <h1>مرحباً بك في AgentX.Ai</h1>
+  <p>تم تسجيل الدخول بنجاح.</p>
 </body>
 </html>
