@@ -5,7 +5,214 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AgentX — إنشاء حساب</title>
 
-  <!-- Firebase SDKs -->
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #090910;
+      --card: #14141f;
+      --border: rgba(255,255,255,0.08);
+      --purple: #534AB7;
+      --purpleL: #7F77DD;
+      --purpleLL: #C8B8FF;
+      --white: #fff;
+      --w70: rgba(255,255,255,0.70);
+      --w40: rgba(255,255,255,0.40);
+      --w08: rgba(255,255,255,0.08);
+      --w04: rgba(255,255,255,0.04);
+    }
+
+    html, body {
+      min-height: 100vh;
+      background: var(--bg);
+      font-family: 'Cairo', sans-serif;
+      color: var(--white);
+      overflow-x: hidden;
+    }
+
+    .page {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 420px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 32px 24px;
+      box-shadow: 0 0 60px rgba(83,74,183,0.12), 0 20px 60px rgba(0,0,0,0.5);
+    }
+
+    .logo-area { text-align: center; margin-bottom: 20px; }
+    .brand-welcome { font-size: 20px; font-weight: 600; margin-bottom: 4px; }
+    .brand-name { font-size: 13px; color: var(--purpleLL); }
+
+    #errorMsg {
+      background: rgba(83,74,183,0.18);
+      border: 1px solid rgba(127,119,221,0.35);
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 13px;
+      color: var(--purpleLL);
+      margin-bottom: 16px;
+      opacity: 0;
+      transform: translateY(-6px);
+      transition: opacity .3s, transform .3s;
+      text-align: center;
+      min-height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .input-group { position: relative; margin-bottom: 12px; }
+    .input-icon {
+      position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+      color: var(--w40); font-size: 16px; pointer-events: none;
+    }
+
+    .input-group input {
+      width: 100%;
+      background: var(--w04);
+      border: 1px solid rgba(83,74,183,0.25);
+      border-radius: 12px;
+      padding: 13px 42px 13px 40px;
+      font-size: 14px;
+      font-family: 'Cairo', sans-serif;
+      color: var(--white);
+      outline: none;
+      text-align: right;
+    }
+
+    .eye-btn {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--w40);
+      font-size: 15px;
+    }
+
+    .btn-primary {
+      width: 100%;
+      background: var(--purple);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      padding: 14px;
+      font-family: 'Cairo', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-primary:disabled { opacity: .6; cursor: not-allowed; }
+
+    #spinner { display: none; align-items: center; gap: 8px; }
+    .spin-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: rgba(255,255,255,0.7);
+      animation: bounce .9s ease-in-out infinite;
+    }
+    .spin-dot:nth-child(2) { animation-delay: .15s; }
+    .spin-dot:nth-child(3) { animation-delay: .30s; }
+    @keyframes bounce { 0%,80%,100%{transform:scale(.6);opacity:.4} 40%{transform:scale(1);opacity:1} }
+
+    .divider {
+      display: flex; align-items: center; gap: 12px; margin: 20px 0 16px;
+    }
+    .divider::before, .divider::after {
+      content: ''; flex: 1; height: 1px; background: var(--border);
+    }
+    .divider span { color: var(--w40); font-size: 12px; }
+
+    .btn-social {
+      width: 100%;
+      background: var(--w04);
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-family: 'Cairo', sans-serif;
+      font-size: 13px;
+      color: var(--w70);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .footer-text {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 12px;
+      color: var(--w40);
+    }
+    .footer-text a { color: var(--purpleL); text-decoration: none; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="card">
+      <div class="logo-area">
+        <div class="brand-welcome">إنشاء حساب</div>
+        <div class="brand-name">AgentX.Ai</div>
+      </div>
+
+      <div id="errorMsg"></div>
+
+      <div class="input-group">
+        <span class="input-icon">✉️</span>
+        <input id="email" type="email" placeholder="البريد الإلكتروني" autocomplete="email" />
+      </div>
+
+      <div class="input-group">
+        <span class="input-icon">🔒</span>
+        <input id="password" type="password" placeholder="كلمة المرور" autocomplete="new-password" />
+        <button class="eye-btn" id="eyeBtn" type="button">👁️</button>
+      </div>
+
+      <div class="input-group">
+        <span class="input-icon">🔒</span>
+        <input id="confirmPassword" type="password" placeholder="تأكيد كلمة المرور" autocomplete="new-password" />
+        <button class="eye-btn" id="eyeBtn2" type="button">👁️</button>
+      </div>
+
+      <button class="btn-primary" id="registerBtn" type="button">
+        <div id="spinner">
+          <div class="spin-dot"></div><div class="spin-dot"></div><div class="spin-dot"></div>
+        </div>
+        <span id="registerLabel">إنشاء الحساب</span>
+      </button>
+
+      <div class="divider"><span>أو</span></div>
+
+      <button class="btn-social" id="googleBtn" type="button">
+        التسجيل بـ Google
+      </button>
+
+      <div class="footer-text">
+        عندك حساب بالفعل؟ <a href="login.html">تسجيل الدخول</a>
+      </div>
+    </div>
+  </div>
+
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import {
@@ -26,552 +233,102 @@
       measurementId: "G-XFK1HTX2SN"
     };
 
-    const app  = initializeApp(firebaseConfig);
+    const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
 
-    // لو المستخدم دخل خلي يروح للصفحة الرئيسية
-    onAuthStateChanged(auth, user => {
+    const el = {
+      registerBtn: document.getElementById("registerBtn"),
+      googleBtn: document.getElementById("googleBtn"),
+      email: document.getElementById("email"),
+      password: document.getElementById("password"),
+      confirmPassword: document.getElementById("confirmPassword"),
+      errorMsg: document.getElementById("errorMsg"),
+      spinner: document.getElementById("spinner"),
+      registerLabel: document.getElementById("registerLabel"),
+      eyeBtn: document.getElementById("eyeBtn"),
+      eyeBtn2: document.getElementById("eyeBtn2")
+    };
+
+    onAuthStateChanged(auth, (user) => {
       if (user) window.location.href = "index.html";
     });
 
-    // ── Email / Password Register ──────────────────────
-    document.getElementById("registerBtn").addEventListener("click", async () => {
-      const email   = document.getElementById("email").value.trim();
-      const pass    = document.getElementById("password").value;
-      const confirm = document.getElementById("confirmPassword").value;
+    el.registerBtn.addEventListener("click", async () => {
+      const email = el.email.value.trim();
+      const pass = el.password.value;
+      const confirm = el.confirmPassword.value;
 
       if (!email || !pass || !confirm) return showError("من فضلك ادخل كل البيانات");
-      if (pass !== confirm)            return showError("كلمة المرور مش متطابقة");
-      if (pass.length < 6)             return showError("كلمة المرور لازم تكون 6 حروف على الأقل");
+      if (pass !== confirm) return showError("كلمة المرور مش متطابقة");
+      if (pass.length < 6) return showError("كلمة المرور لازم تكون 6 حروف على الأقل");
 
       setLoading(true);
       try {
         await createUserWithEmailAndPassword(auth, email, pass);
-        // بعد التسجيل هيروح للصفحة الرئيسية تلقائياً عن طريق onAuthStateChanged
-      } catch(e) {
+      } catch (e) {
+        console.error("Register error:", e);
         showError(getFriendlyError(e.code));
-      } finally { setLoading(false); }
+      } finally {
+        setLoading(false);
+      }
     });
 
-    // ── Google ────────────────────────────────
-    document.getElementById("googleBtn").addEventListener("click", async () => {
+    el.googleBtn.addEventListener("click", async () => {
       setLoading(true);
       try {
         const provider = new GoogleAuthProvider();
         await signInWithPopup(auth, provider);
-      } catch(e) {
-        if (e.code !== "auth/popup-closed-by-user") showError(getFriendlyError(e.code));
-      } finally { setLoading(false); }
+      } catch (e) {
+        console.error("Google sign-in error:", e);
+        if (e.code !== "auth/popup-closed-by-user") {
+          showError(getFriendlyError(e.code));
+        }
+      } finally {
+        setLoading(false);
+      }
+    });
+
+    el.eyeBtn.addEventListener("click", () => {
+      const show = el.password.type === "password";
+      el.password.type = show ? "text" : "password";
+      el.eyeBtn.textContent = show ? "🙈" : "👁️";
+    });
+
+    el.eyeBtn2.addEventListener("click", () => {
+      const show = el.confirmPassword.type === "password";
+      el.confirmPassword.type = show ? "text" : "password";
+      el.eyeBtn2.textContent = show ? "🙈" : "👁️";
     });
 
     function showError(msg) {
-      const el = document.getElementById("errorMsg");
-      el.textContent = msg;
-      el.style.opacity = "1";
-      el.style.transform = "translateY(0)";
-      setTimeout(() => { el.style.opacity = "0"; el.style.transform = "translateY(-6px)"; }, 4000);
+      el.errorMsg.textContent = msg;
+      el.errorMsg.style.opacity = "1";
+      el.errorMsg.style.transform = "translateY(0)";
+      setTimeout(() => {
+        el.errorMsg.style.opacity = "0";
+        el.errorMsg.style.transform = "translateY(-6px)";
+      }, 4000);
     }
 
     function setLoading(state) {
-      document.getElementById("registerBtn").disabled = state;
-      document.getElementById("spinner").style.display = state ? "flex" : "none";
-      document.getElementById("registerLabel").style.display = state ? "none" : "block";
+      el.registerBtn.disabled = state;
+      el.googleBtn.disabled = state;
+      el.spinner.style.display = state ? "flex" : "none";
+      el.registerLabel.style.display = state ? "none" : "block";
     }
 
     function getFriendlyError(code) {
       const map = {
-        "auth/email-already-in-use":  "الإيميل ده موجود بالفعل",
-        "auth/invalid-email":         "الإيميل مش صح",
-        "auth/weak-password":         "كلمة المرور ضعيفة جداً",
-        "auth/too-many-requests":     "محاولات كتير، جرّب بعدين",
-        "auth/network-request-failed":"تحقق من اتصالك بالإنترنت",
+        "auth/email-already-in-use": "الإيميل ده موجود بالفعل",
+        "auth/invalid-email": "الإيميل مش صح",
+        "auth/weak-password": "كلمة المرور ضعيفة جداً",
+        "auth/too-many-requests": "محاولات كتير، جرّب بعدين",
+        "auth/network-request-failed": "تحقق من اتصالك بالإنترنت",
+        "auth/operation-not-allowed": "فعّل Email/Password من Firebase Console",
+        "auth/invalid-credential": "بيانات الدخول غير صحيحة"
       };
-      return map[code] || "حدث خطأ، حاول مرة تانية";
+      return map[code] || `حدث خطأ: ${code || "unknown"}`;
     }
   </script>
-
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&display=swap');
-
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    :root {
-      --bg:        #090910;
-      --surface:   #101018;
-      --card:      #14141f;
-      --border:    rgba(255,255,255,0.08);
-      --purple:    #534AB7;
-      --purpleL:   #7F77DD;
-      --purpleLL:  #C8B8FF;
-      --white:     #ffffff;
-      --w70:       rgba(255,255,255,0.70);
-      --w40:       rgba(255,255,255,0.40);
-      --w20:       rgba(255,255,255,0.20);
-      --w08:       rgba(255,255,255,0.08);
-      --w04:       rgba(255,255,255,0.04);
-    }
-
-    html, body {
-      min-height: 100vh;
-      background: var(--bg);
-      font-family: 'Cairo', sans-serif;
-      color: var(--white);
-      overflow-x: hidden;
-    }
-
-    /* ── Background orbs ── */
-    .orb {
-      position: fixed;
-      border-radius: 50%;
-      filter: blur(80px);
-      pointer-events: none;
-      z-index: 0;
-    }
-    .orb-1 { width: 380px; height: 380px; top: -120px; right: -80px;  background: rgba(83,74,183,0.22); }
-    .orb-2 { width: 280px; height: 280px; bottom: 40px; left: -60px; background: rgba(29,158,117,0.12); }
-    .orb-3 { width: 200px; height: 200px; top: 40%; left: 50%; transform: translate(-50%,-50%); background: rgba(83,74,183,0.07); }
-
-    /* ── Lightning flash overlay ── */
-    #flash { position: fixed; inset: 0; background: var(--purpleLL); opacity: 0; pointer-events: none; z-index: 1; transition: opacity 0.08s; }
-
-    /* ── Layout ── */
-    .page {
-      position: relative; z-index: 2;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 24px 16px;
-    }
-
-    .card {
-      width: 100%;
-      max-width: 420px;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 36px 32px 32px;
-      box-shadow: 0 0 60px rgba(83,74,183,0.12), 0 20px 60px rgba(0,0,0,0.5);
-      animation: fadeUp 0.7s cubic-bezier(.22,.68,0,1.2) both;
-    }
-
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(24px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
-    /* ── Logo area ── */
-    .logo-area {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      margin-bottom: 28px;
-    }
-
-    #boltCanvas {
-      width: 120px;
-      height: 100px;
-      display: block;
-      margin-bottom: 10px;
-    }
-
-    .brand-welcome {
-      font-size: 20px;
-      font-weight: 600;
-      letter-spacing: 3px;
-      color: var(--white);
-      margin-bottom: 4px;
-    }
-
-    .brand-name {
-      font-size: 13px;
-      font-weight: 500;
-      letter-spacing: 2px;
-      background: linear-gradient(90deg, var(--purple), var(--purpleLL), #fff, var(--purpleLL), var(--purple));
-      background-size: 200%;
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      animation: shimmer 3s linear infinite;
-    }
-
-    @keyframes shimmer {
-      from { background-position: 200% center; }
-      to   { background-position: -200% center; }
-    }
-
-    /* ── Error message ── */
-    #errorMsg {
-      background: rgba(83,74,183,0.18);
-      border: 1px solid rgba(127,119,221,0.35);
-      border-radius: 10px;
-      padding: 10px 14px;
-      font-size: 13px;
-      color: var(--purpleLL);
-      margin-bottom: 16px;
-      opacity: 0;
-      transform: translateY(-6px);
-      transition: opacity 0.3s, transform 0.3s;
-      text-align: center;
-    }
-
-    /* ── Inputs ── */
-    .input-group {
-      position: relative;
-      margin-bottom: 12px;
-    }
-
-    .input-icon {
-      position: absolute;
-      right: 14px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: var(--w40);
-      font-size: 16px;
-      pointer-events: none;
-    }
-
-    .input-group input {
-      width: 100%;
-      background: var(--w04);
-      border: 1px solid rgba(83,74,183,0.25);
-      border-radius: 12px;
-      padding: 13px 42px 13px 40px;
-      font-size: 14px;
-      font-family: 'Cairo', sans-serif;
-      color: var(--white);
-      outline: none;
-      transition: border-color 0.2s, box-shadow 0.2s;
-      text-align: right;
-    }
-
-    .input-group input::placeholder { color: var(--w40); }
-
-    .input-group input:focus {
-      border-color: rgba(127,119,221,0.7);
-      box-shadow: 0 0 0 3px rgba(83,74,183,0.12);
-    }
-
-    .eye-btn {
-      position: absolute;
-      left: 12px;
-      top: 50%;
-      transform: translateY(-50%);
-      background: none;
-      border: none;
-      cursor: pointer;
-      color: var(--w40);
-      font-size: 15px;
-      padding: 4px;
-      transition: color 0.2s;
-    }
-    .eye-btn:hover { color: var(--w70); }
-
-    /* ── Primary button ── */
-    .btn-primary {
-      width: 100%;
-      background: var(--purple);
-      color: var(--white);
-      border: none;
-      border-radius: 12px;
-      padding: 14px;
-      font-family: 'Cairo', sans-serif;
-      font-size: 15px;
-      font-weight: 600;
-      cursor: pointer;
-      margin-top: 8px;
-      transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-    }
-    .btn-primary:hover  { background: var(--purpleL); box-shadow: 0 4px 20px rgba(83,74,183,0.4); }
-    .btn-primary:active { transform: scale(0.98); }
-    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
-
-    #spinner { display: none; align-items: center; gap: 8px; }
-    .spin-dot {
-      width: 7px; height: 7px;
-      border-radius: 50%;
-      background: rgba(255,255,255,0.7);
-      animation: bounce 0.9s ease-in-out infinite;
-    }
-    .spin-dot:nth-child(2) { animation-delay: .15s; }
-    .spin-dot:nth-child(3) { animation-delay: .30s; }
-    @keyframes bounce { 0%,80%,100%{transform:scale(0.6);opacity:.4} 40%{transform:scale(1);opacity:1} }
-
-    /* ── Divider ── */
-    .divider {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin: 20px 0 16px;
-    }
-    .divider::before, .divider::after {
-      content: '';
-      flex: 1;
-      height: 1px;
-      background: var(--border);
-    }
-    .divider span { color: var(--w40); font-size: 12px; white-space: nowrap; }
-
-    /* ── Social buttons ── */
-    .btn-social {
-      width: 100%;
-      background: var(--w04);
-      border: 1px solid rgba(255,255,255,0.10);
-      border-radius: 12px;
-      padding: 12px 16px;
-      font-family: 'Cairo', sans-serif;
-      font-size: 13px;
-      color: var(--w70);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      margin-bottom: 8px;
-      transition: background 0.2s, border-color 0.2s, transform 0.15s;
-    }
-    .btn-social:hover  { background: var(--w08); border-color: rgba(255,255,255,0.18); }
-    .btn-social:active { transform: scale(0.98); }
-    .btn-social svg { flex-shrink: 0; }
-
-    /* ── Footer link ── */
-    .footer-text {
-      text-align: center;
-      margin-top: 20px;
-      font-size: 12px;
-      color: var(--w40);
-    }
-    .footer-text a {
-      color: var(--purpleL);
-      text-decoration: none;
-      font-weight: 600;
-      transition: color 0.2s;
-    }
-    .footer-text a:hover { color: var(--purpleLL); }
-
-    /* ── Mobile ── */
-    @media (max-width: 480px) {
-      .card { padding: 28px 20px 24px; border-radius: 16px; }
-    }
-  </style>
-</head>
-<body>
-
-<!-- Background -->
-<div class="orb orb-1"></div>
-<div class="orb orb-2"></div>
-<div class="orb orb-3"></div>
-<div id="flash"></div>
-
-<div class="page">
-  <div class="card">
-
-    <!-- Logo / Lightning -->
-    <div class="logo-area">
-      <canvas id="boltCanvas" width="240" height="200"></canvas>
-      <div class="brand-welcome">إنشاء حساب</div>
-      <div class="brand-name">AgentX.Ai</div>
-    </div>
-
-    <!-- Error -->
-    <div id="errorMsg"></div>
-
-    <!-- Email -->
-    <div class="input-group">
-      <span class="input-icon">✉️</span>
-      <input id="email" type="email" placeholder="البريد الإلكتروني" autocomplete="email" />
-    </div>
-
-    <!-- Password -->
-    <div class="input-group">
-      <span class="input-icon">🔒</span>
-      <input id="password" type="password" placeholder="كلمة المرور" autocomplete="new-password" />
-      <button class="eye-btn" id="eyeBtn" type="button" title="إظهار / إخفاء">👁️</button>
-    </div>
-
-    <!-- Confirm Password -->
-    <div class="input-group">
-      <span class="input-icon">🔒</span>
-      <input id="confirmPassword" type="password" placeholder="تأكيد كلمة المرور" autocomplete="new-password" />
-      <button class="eye-btn" id="eyeBtn2" type="button" title="إظهار / إخفاء">👁️</button>
-    </div>
-
-    <!-- Register -->
-    <button class="btn-primary" id="registerBtn">
-      <div id="spinner"><div class="spin-dot"></div><div class="spin-dot"></div><div class="spin-dot"></div></div>
-      <span id="registerLabel">إنشاء الحساب</span>
-    </button>
-
-    <div class="divider"><span>أو</span></div>
-
-    <!-- Google -->
-    <button class="btn-social" id="googleBtn">
-      <svg width="18" height="18" viewBox="0 0 18 18">
-        <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" fill="#4285F4"/>
-        <path d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853"/>
-        <path d="M3.964 10.707A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.707V4.961H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.039l3.007-2.332z" fill="#FBBC05"/>
-        <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.96l3.007 2.332C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
-      </svg>
-      التسجيل بـ Google
-    </button>
-
-    <div class="footer-text">
-      عندك حساب بالفعل؟ <a href="login.html">تسجيل الدخول</a>
-    </div>
-
-  </div>
-</div>
-
-<!-- Lightning animation -->
-<script>
-  // Toggle password
-  const eyeBtn  = document.getElementById('eyeBtn');
-  const passInp = document.getElementById('password');
-  eyeBtn.addEventListener('click', () => {
-    const show = passInp.type === 'password';
-    passInp.type = show ? 'text' : 'password';
-    eyeBtn.textContent = show ? '🙈' : '👁️';
-  });
-
-  const eyeBtn2   = document.getElementById('eyeBtn2');
-  const confirmInp = document.getElementById('confirmPassword');
-  eyeBtn2.addEventListener('click', () => {
-    const show = confirmInp.type === 'password';
-    confirmInp.type = show ? 'text' : 'password';
-    eyeBtn2.textContent = show ? '🙈' : '👁️';
-  });
-
-  // ── Lightning Canvas ──────────────────────────
-  const canvas = document.getElementById('boltCanvas');
-  const ctx    = canvas.getContext('2d');
-  const W = canvas.width, H = canvas.height;
-  const flash  = document.getElementById('flash');
-  let prog = 0, shakeProg = 0, shaking = false;
-  const SPEED = 0.007;
-
-  function lerp(a, b, t) { return a + (b - a) * t; }
-
-  function drawBolt(pts, alpha, glowR, colors) {
-    if (alpha <= 0) return;
-    ctx.save();
-    const grad = ctx.createLinearGradient(0, 0, 0, H);
-    colors.forEach((c, i) => grad.addColorStop(i / (colors.length - 1), c));
-    ctx.shadowBlur  = glowR;
-    ctx.shadowColor = colors[0];
-    ctx.fillStyle   = grad;
-    ctx.globalAlpha = alpha;
-    ctx.beginPath();
-    ctx.moveTo(pts[0][0], pts[0][1]);
-    for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]);
-    ctx.closePath();
-    ctx.fill();
-    ctx.restore();
-  }
-
-  function drawCracks(cx, cy, p) {
-    const cracks = [
-      [[cx,cy],[cx-56,cy+40]], [[cx,cy],[cx+52,cy+48]],
-      [[cx,cy],[cx-110,cy+24]], [[cx,cy],[cx+108,cy+20]],
-      [[cx,cy],[cx,cy+60]]
-    ];
-    ctx.save();
-    const grad = ctx.createLinearGradient(0, cy, 0, cy + 60);
-    grad.addColorStop(0, 'rgba(200,184,255,0.9)');
-    grad.addColorStop(1, 'rgba(83,74,183,0)');
-    ctx.strokeStyle = grad;
-    cracks.forEach(([a, b], i) => {
-      ctx.lineWidth   = i < 2 ? 2 : 1;
-      ctx.lineCap     = 'round';
-      ctx.shadowBlur  = 4;
-      ctx.shadowColor = '#C8B8FF';
-      ctx.beginPath();
-      ctx.moveTo(a[0], a[1]);
-      ctx.lineTo(lerp(a[0], b[0], p), lerp(a[1], b[1], p));
-      ctx.stroke();
-    });
-    ctx.restore();
-  }
-
-  function tick() {
-    ctx.clearRect(0, 0, W, H);
-    prog += SPEED;
-    if (prog >= 1) prog = 0;
-
-    const t = prog;
-    const boltAlpha = t < 0.5
-      ? (t < 0.08 ? t / 0.08 : 1 - (t - 0.08) / 0.42)
-      : 0;
-    const clampedBA = Math.max(0, Math.min(1, boltAlpha));
-
-    if (t > 0.09 && t < 0.13) {
-      flash.style.opacity = (0.13 - t) / 0.04 * 0.12;
-    } else { flash.style.opacity = 0; }
-
-    if (t > 0.09 && t < 0.10 && !shaking) {
-      shaking = true; shakeProg = 0;
-    }
-    if (shaking) {
-      shakeProg += 0.07;
-      if (shakeProg >= 1) shaking = false;
-    }
-
-    const cx = W / 2;
-    const groundY = H * 0.76;
-    const shakeX  = shaking ? Math.sin(shakeProg * Math.PI * 6) * 5 * (1 - shakeProg) : 0;
-
-    ctx.save();
-    ctx.translate(shakeX, 0);
-
-    if (clampedBA > 0) {
-      drawBolt([
-        [cx, 0], [cx-28, 76], [cx-12, 72], [cx-44, 164], [cx+32, 60], [cx, 64]
-      ], clampedBA * 0.95, 16, [
-        `rgba(255,255,255,${clampedBA})`,
-        `rgba(200,184,255,${clampedBA})`,
-        `rgba(127,119,221,${0.2 * clampedBA})`
-      ]);
-      drawBolt([
-        [cx-52, 16], [cx-72, 72], [cx-60, 70], [cx-88, 140], [cx-32, 56], [cx-60, 60]
-      ], clampedBA * 0.7, 10, [
-        `rgba(255,255,255,${0.9 * clampedBA})`,
-        `rgba(159,143,255,${0.1 * clampedBA})`
-      ]);
-      drawBolt([
-        [cx+44, 24], [cx+28, 76], [cx+40, 74], [cx+16, 136], [cx+68, 60], [cx+40, 64]
-      ], clampedBA * 0.65, 10, [
-        `rgba(255,255,255,${0.9 * clampedBA})`,
-        `rgba(159,143,255,${0.1 * clampedBA})`
-      ]);
-    }
-
-    ctx.save();
-    ctx.strokeStyle = 'rgba(127,119,221,0.25)';
-    ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(0, groundY); ctx.lineTo(W, groundY); ctx.stroke();
-    ctx.restore();
-
-    const impactP = t < 0.5 ? t / 0.5 : 0;
-    if (impactP > 0.09) {
-      ctx.save();
-      ctx.shadowBlur  = 20;
-      ctx.shadowColor = '#C8B8FF';
-      ctx.fillStyle   = `rgba(200,184,255,${0.6 * clampedBA})`;
-      ctx.beginPath();
-      ctx.arc(cx - 16, groundY, 10, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
-      drawCracks(cx - 16, groundY, Math.min(1, (impactP - 0.09) / 0.06));
-    }
-
-    ctx.restore();
-    requestAnimationFrame(tick);
-  }
-
-  tick();
-</script>
-
 </body>
 </html>
