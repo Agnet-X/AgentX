@@ -1,468 +1,571 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AgentX — تسجيل الدخول</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
 
+  <!-- Firebase SDKs -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import {
       getAuth,
       signInWithEmailAndPassword,
-      signInWithPopup,
       GoogleAuthProvider,
-      RecaptchaVerifier,
-      signInWithPhoneNumber,
+      signInWithPopup,
       onAuthStateChanged
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
     // ══════════════════════════════════════════
-    //  🔥 ضع هنا إعدادات Firebase الخاصة بك
+    //  🔧 ضع هنا الـ Firebase Config بتاعك
     // ══════════════════════════════════════════
-    const firebaseConfig = {
-      apiKey:            "YOUR_API_KEY",
-      authDomain:        "YOUR_AUTH_DOMAIN",
-      projectId:         "YOUR_PROJECT_ID",
-      storageBucket:     "YOUR_STORAGE_BUCKET",
-      messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-      appId:             "YOUR_APP_ID"
-    };
+  const firebaseConfig = {
+  apiKey: "AIzaSyBMbrB0R0Om0t2kryg4SDhAHoaNSBvFnpc",
+  authDomain: "agentx-27ea9.firebaseapp.com",
+  projectId: "agentx-27ea9",
+  storageBucket: "agentx-27ea9.firebasestorage.app",
+  messagingSenderId: "244685077463",
+  appId: "1:244685077463:web:affd6ce25ea0bdbd1a2992",
+  measurementId: "G-XFK1HTX2SN"
+};
 
-    const app      = initializeApp(firebaseConfig);
-    const auth     = getAuth(app);
-    const provider = new GoogleAuthProvider();
+    const app  = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
 
-    // بعد تسجيل الدخول روح للصفحة الرئيسية
+    // لو المستخدم دخل خلي يروح للصفحة الرئيسية
     onAuthStateChanged(auth, user => {
-      if (user) window.location.href = 'index.html';
+      if (user) window.location.href = "index.html"; // غيّر للرابط بتاعك
     });
 
-    // ── Email ──
-    window.__emailLogin = (email, pass) =>
-      signInWithEmailAndPassword(auth, email, pass);
+    // ── Email / Password ──────────────────────
+    document.getElementById("loginBtn").addEventListener("click", async () => {
+      const email = document.getElementById("email").value.trim();
+      const pass  = document.getElementById("password").value;
+      if (!email || !pass) return showError("من فضلك ادخل الإيميل وكلمة المرور");
+      setLoading(true);
+      try {
+        await signInWithEmailAndPassword(auth, email, pass);
+      } catch(e) {
+        showError(getFriendlyError(e.code));
+      } finally { setLoading(false); }
+    });
 
-    // ── Google ──
-    window.__googleLogin = () =>
-      signInWithPopup(auth, provider);
+    // ── Google ────────────────────────────────
+    document.getElementById("googleBtn").addEventListener("click", async () => {
+      setLoading(true);
+      try {
+        const provider = new GoogleAuthProvider();
+        await signInWithPopup(auth, provider);
+      } catch(e) {
+        if (e.code !== "auth/popup-closed-by-user") showError(getFriendlyError(e.code));
+      } finally { setLoading(false); }
+    });
 
-    // ── Phone: إرسال OTP ──
-    window.__sendOTP = async (phone) => {
-      if (!window._recaptcha) {
-        window._recaptcha = new RecaptchaVerifier(auth, 'recaptcha-container', {
-          size: 'invisible',
-          callback: () => {}
-        });
-        await window._recaptcha.render();
-      }
-      window._confirmResult = await signInWithPhoneNumber(auth, phone, window._recaptcha);
-    };
 
-    // ── Phone: تأكيد OTP ──
-    window.__verifyOTP = (code) =>
-      window._confirmResult.confirm(code);
+    function showError(msg) {
+      const el = document.getElementById("errorMsg");
+      el.textContent = msg;
+      el.style.opacity = "1";
+      el.style.transform = "translateY(0)";
+      setTimeout(() => { el.style.opacity = "0"; el.style.transform = "translateY(-6px)"; }, 4000);
+    }
+
+    function setLoading(state) {
+      document.getElementById("loginBtn").disabled = state;
+      document.getElementById("spinner").style.display = state ? "flex" : "none";
+      document.getElementById("loginLabel").style.display = state ? "none" : "block";
+    }
+
+    function getFriendlyError(code) {
+      const map = {
+        "auth/user-not-found":      "لا يوجد حساب بهذا الإيميل",
+        "auth/wrong-password":      "كلمة المرور غلط",
+        "auth/invalid-email":       "الإيميل مش صح",
+        "auth/too-many-requests":   "محاولات كتير، جرّب بعدين",
+        "auth/network-request-failed": "تحقق من اتصالك بالإنترنت",
+        "auth/invalid-verification-code": "كود التحقق غلط",
+      };
+      return map[code] || "حدث خطأ، حاول مرة تانية";
+    }
   </script>
 
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
     :root {
-      --bg:       #090910;
-      --bg2:      #0f0f18;
-      --bg3:      #14141f;
-      --purple:   #534AB7;
-      --purpleL:  #7F77DD;
-      --purpleLL: #C8B8FF;
-      --border:   rgba(83,74,183,0.25);
-      --border2:  rgba(255,255,255,0.07);
-      --text:     #f0f0f0;
-      --muted:    rgba(255,255,255,0.35);
-      --w10:      rgba(255,255,255,0.06);
+      --bg:        #090910;
+      --surface:   #101018;
+      --card:      #14141f;
+      --border:    rgba(255,255,255,0.08);
+      --purple:    #534AB7;
+      --purpleL:   #7F77DD;
+      --purpleLL:  #C8B8FF;
+      --white:     #ffffff;
+      --w70:       rgba(255,255,255,0.70);
+      --w40:       rgba(255,255,255,0.40);
+      --w20:       rgba(255,255,255,0.20);
+      --w08:       rgba(255,255,255,0.08);
+      --w04:       rgba(255,255,255,0.04);
     }
-    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
-    body {
-      font-family: 'IBM Plex Sans Arabic', sans-serif;
-      background: var(--bg); color: var(--text);
-      min-height: 100dvh; display:flex; align-items:center; justify-content:center;
-      overflow:hidden; position:relative;
+
+    html, body {
+      min-height: 100vh;
+      background: var(--bg);
+      font-family: 'Cairo', sans-serif;
+      color: var(--white);
+      overflow-x: hidden;
     }
-    .orb { position:fixed; border-radius:50%; pointer-events:none; filter:blur(60px); }
-    .orb-1 { width:320px;height:320px;background:rgba(83,74,183,0.22);top:-100px;right:-80px; }
-    .orb-2 { width:220px;height:220px;background:rgba(29,158,117,0.11);bottom:10px;left:-60px; }
-    #flash {
-      position:fixed;inset:0;background:var(--purpleLL);
-      opacity:0;pointer-events:none;z-index:0;
-      animation:flashLoop 3.5s ease-in-out infinite;
+
+    /* ── Background orbs ── */
+    .orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(80px);
+      pointer-events: none;
+      z-index: 0;
     }
-    @keyframes flashLoop {
-      0%,8%,100%{opacity:0;} 9%{opacity:0.05;} 10%{opacity:0.02;} 15%{opacity:0.04;} 16%{opacity:0;}
+    .orb-1 { width: 380px; height: 380px; top: -120px; right: -80px;  background: rgba(83,74,183,0.22); }
+    .orb-2 { width: 280px; height: 280px; bottom: 40px; left: -60px; background: rgba(29,158,117,0.12); }
+    .orb-3 { width: 200px; height: 200px; top: 40%; left: 50%; transform: translate(-50%,-50%); background: rgba(83,74,183,0.07); }
+
+    /* ── Lightning flash overlay ── */
+    #flash { position: fixed; inset: 0; background: var(--purpleLL); opacity: 0; pointer-events: none; z-index: 1; transition: opacity 0.08s; }
+
+    /* ── Layout ── */
+    .page {
+      position: relative; z-index: 2;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
     }
+
     .card {
-      position:relative;z-index:1;width:100%;max-width:380px;
-      background:var(--bg2);border:1px solid var(--border);border-radius:24px;
-      padding:32px 28px 28px;
-      box-shadow:0 0 60px rgba(83,74,183,0.08),0 24px 48px rgba(0,0,0,0.5);
-      animation:cardIn 0.9s cubic-bezier(.22,1,.36,1) both;
+      width: 100%;
+      max-width: 420px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 36px 32px 32px;
+      box-shadow: 0 0 60px rgba(83,74,183,0.12), 0 20px 60px rgba(0,0,0,0.5);
+      animation: fadeUp 0.7s cubic-bezier(.22,.68,0,1.2) both;
     }
-    @keyframes cardIn {
-      from{opacity:0;transform:translateY(24px) scale(0.97);}
-      to{opacity:1;transform:translateY(0) scale(1);}
-    }
-    .logo-wrap{display:flex;flex-direction:column;align-items:center;gap:8px;margin-bottom:24px;}
-    .bolt-svg{animation:boltGlow 3.5s ease-in-out infinite;}
-    @keyframes boltGlow {
-      0%,100%{filter:drop-shadow(0 0 0 rgba(200,184,255,0));}
-      9%{filter:drop-shadow(0 0 12px rgba(200,184,255,0.7)) drop-shadow(0 0 28px rgba(83,74,183,0.5));}
-      10%{filter:drop-shadow(0 0 4px rgba(200,184,255,0.3));}
-      15%{filter:drop-shadow(0 0 18px rgba(200,184,255,0.6));}
-      16%{filter:drop-shadow(0 0 0 rgba(200,184,255,0));}
-    }
-    .crack{animation:crackReveal 3.5s ease-in-out infinite;}
-    @keyframes crackReveal{0%,8%,100%{opacity:0;}9%,20%{opacity:1;}35%{opacity:0;}}
-    .logo-title{font-family:'Space Grotesk',sans-serif;font-size:1.4rem;font-weight:700;letter-spacing:3px;color:#fff;}
-    .logo-sub{
-      font-size:0.75rem;font-weight:500;letter-spacing:2px;
-      background:linear-gradient(90deg,var(--purple),var(--purpleLL),#fff,var(--purpleLL),var(--purple));
-      background-size:200%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;
-      animation:shimmer 3s linear infinite;
-    }
-    @keyframes shimmer{to{background-position:-200% center;}}
-    .field-wrap{position:relative;margin-bottom:10px;}
-    .field-icon{position:absolute;top:50%;transform:translateY(-50%);right:14px;color:var(--muted);pointer-events:none;display:flex;align-items:center;}
-    .field-suffix{position:absolute;top:50%;transform:translateY(-50%);left:12px;cursor:pointer;color:var(--muted);background:none;border:none;display:flex;align-items:center;padding:4px;}
-    .field-suffix:hover{color:var(--text);}
-    input{
-      width:100%;background:var(--w10);border:0.5px solid var(--border);border-radius:12px;
-      padding:13px 42px 13px 16px;color:#fff;font-family:inherit;font-size:0.88rem;
-      text-align:right;outline:none;transition:border-color 0.25s,box-shadow 0.25s;
-    }
-    input.has-suffix{padding-left:40px;}
-    input::placeholder{color:var(--muted);}
-    input:focus{border-color:rgba(127,119,221,0.7);box-shadow:0 0 0 3px rgba(83,74,183,0.12);}
-    .btn-primary{
-      width:100%;padding:13px;background:var(--purple);border:none;border-radius:12px;
-      color:#fff;font-family:inherit;font-size:0.93rem;font-weight:600;
-      cursor:pointer;transition:background 0.2s,transform 0.15s,box-shadow 0.2s;
-      margin-top:6px;display:flex;align-items:center;justify-content:center;gap:8px;
-    }
-    .btn-primary:hover{background:var(--purpleL);transform:translateY(-1px);box-shadow:0 6px 20px rgba(83,74,183,0.35);}
-    .btn-primary:active{transform:translateY(0);}
-    .btn-primary:disabled{opacity:0.4;cursor:not-allowed;transform:none;}
-    .divider{display:flex;align-items:center;gap:12px;margin:16px 0;}
-    .divider hr{flex:1;border:none;border-top:1px solid var(--border2);}
-    .divider span{color:var(--muted);font-size:0.75rem;}
-    .btn-social{
-      width:100%;padding:11px 16px;background:var(--w10);border:0.5px solid var(--border2);border-radius:12px;
-      color:rgba(255,255,255,0.7);font-family:inherit;font-size:0.83rem;
-      cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;
-      transition:background 0.2s,border-color 0.2s,transform 0.15s;margin-bottom:8px;
-    }
-    .btn-social:hover{background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.18);transform:translateY(-1px);}
-    .btn-social:active{transform:none;}
-    .register-row{text-align:center;margin-top:18px;font-size:0.78rem;color:var(--muted);}
-    .register-row a{color:var(--purpleL);text-decoration:none;font-weight:500;}
-    .register-row a:hover{color:var(--purpleLL);}
-    .spinner{display:inline-block;width:20px;height:20px;border:2.5px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite;}
-    @keyframes spin{to{transform:rotate(360deg);}}
-    #snack{
-      position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);
-      background:var(--purple);color:#fff;padding:10px 20px;border-radius:12px;font-size:0.82rem;
-      box-shadow:0 8px 24px rgba(83,74,183,0.4);transition:transform 0.35s cubic-bezier(.22,1,.36,1);
-      z-index:999;pointer-events:none;white-space:nowrap;
-    }
-    #snack.show{transform:translateX(-50%) translateY(0);}
 
-    /* Modal */
-    .modal-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);z-index:100;align-items:center;justify-content:center;}
-    .modal-backdrop.open{display:flex;}
-    .modal{background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:28px 24px;width:90%;max-width:340px;animation:cardIn 0.4s cubic-bezier(.22,1,.36,1) both;}
-    .modal h3{font-size:1rem;font-weight:600;color:#fff;margin-bottom:6px;text-align:center;}
-    .modal p{font-size:0.78rem;color:var(--muted);text-align:center;margin-bottom:18px;}
-    .modal-btns{display:flex;gap:8px;margin-top:16px;}
-    .btn-cancel{flex:1;padding:11px;background:transparent;border:1px solid var(--border2);border-radius:10px;color:var(--muted);font-family:inherit;font-size:0.85rem;cursor:pointer;transition:border-color 0.2s,color 0.2s;}
-    .btn-cancel:hover{border-color:rgba(255,255,255,0.2);color:#fff;}
-    .btn-confirm{flex:1;padding:11px;background:var(--purple);border:none;border-radius:10px;color:#fff;font-family:inherit;font-size:0.85rem;font-weight:600;cursor:pointer;transition:background 0.2s;display:flex;align-items:center;justify-content:center;gap:6px;}
-    .btn-confirm:hover{background:var(--purpleL);}
-    .btn-confirm:disabled{opacity:0.4;cursor:not-allowed;}
-    .otp-wrap{display:flex;gap:8px;justify-content:center;direction:ltr;}
-    .otp-box{width:42px;height:50px;background:var(--w10);border:1px solid var(--border);border-radius:10px;color:#fff;font-size:1.3rem;font-weight:700;text-align:center;outline:none;font-family:'Space Grotesk',sans-serif;transition:border-color 0.2s,box-shadow 0.2s;}
-    .otp-box:focus{border-color:rgba(127,119,221,0.7);box-shadow:0 0 0 3px rgba(83,74,183,0.15);}
-    .phone-row{display:flex;gap:8px;direction:ltr;}
-    .country-code{width:72px;background:var(--w10);border:0.5px solid var(--border);border-radius:12px;color:#fff;font-family:inherit;font-size:0.88rem;text-align:center;outline:none;padding:13px 6px;transition:border-color 0.25s,box-shadow 0.25s;}
-    .country-code:focus{border-color:rgba(127,119,221,0.7);box-shadow:0 0 0 3px rgba(83,74,183,0.12);}
-    .phone-number{flex:1;text-align:left;padding:13px 14px;}
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
 
-    @media(max-width:420px){
-      .card{border-radius:0;min-height:100dvh;border:none;padding:28px 18px;justify-content:center;display:flex;flex-direction:column;}
-      body{align-items:flex-start;}
+    /* ── Logo area ── */
+    .logo-area {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 28px;
+    }
+
+    /* Lightning SVG canvas */
+    #boltCanvas {
+      width: 120px;
+      height: 100px;
+      display: block;
+      margin-bottom: 10px;
+    }
+
+    .brand-welcome {
+      font-size: 20px;
+      font-weight: 600;
+      letter-spacing: 3px;
+      color: var(--white);
+      margin-bottom: 4px;
+    }
+
+    .brand-name {
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 2px;
+      background: linear-gradient(90deg, var(--purple), var(--purpleLL), #fff, var(--purpleLL), var(--purple));
+      background-size: 200%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: shimmer 3s linear infinite;
+    }
+
+    @keyframes shimmer {
+      from { background-position: 200% center; }
+      to   { background-position: -200% center; }
+    }
+
+    /* ── Error message ── */
+    #errorMsg {
+      background: rgba(83,74,183,0.18);
+      border: 1px solid rgba(127,119,221,0.35);
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 13px;
+      color: var(--purpleLL);
+      margin-bottom: 16px;
+      opacity: 0;
+      transform: translateY(-6px);
+      transition: opacity 0.3s, transform 0.3s;
+      text-align: center;
+    }
+
+    /* ── Inputs ── */
+    .input-group {
+      position: relative;
+      margin-bottom: 12px;
+    }
+
+    .input-icon {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--w40);
+      font-size: 16px;
+      pointer-events: none;
+    }
+
+    .input-group input {
+      width: 100%;
+      background: var(--w04);
+      border: 1px solid rgba(83,74,183,0.25);
+      border-radius: 12px;
+      padding: 13px 42px 13px 40px;
+      font-size: 14px;
+      font-family: 'Cairo', sans-serif;
+      color: var(--white);
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      text-align: right;
+    }
+
+    .input-group input::placeholder { color: var(--w40); }
+
+    .input-group input:focus {
+      border-color: rgba(127,119,221,0.7);
+      box-shadow: 0 0 0 3px rgba(83,74,183,0.12);
+    }
+
+    .eye-btn {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--w40);
+      font-size: 15px;
+      padding: 4px;
+      transition: color 0.2s;
+    }
+    .eye-btn:hover { color: var(--w70); }
+
+    /* ── Primary button ── */
+    .btn-primary {
+      width: 100%;
+      background: var(--purple);
+      color: var(--white);
+      border: none;
+      border-radius: 12px;
+      padding: 14px;
+      font-family: 'Cairo', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .btn-primary:hover  { background: var(--purpleL); box-shadow: 0 4px 20px rgba(83,74,183,0.4); }
+    .btn-primary:active { transform: scale(0.98); }
+    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    #spinner { display: none; align-items: center; gap: 8px; }
+    .spin-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.7);
+      animation: bounce 0.9s ease-in-out infinite;
+    }
+    .spin-dot:nth-child(2) { animation-delay: .15s; }
+    .spin-dot:nth-child(3) { animation-delay: .30s; }
+    @keyframes bounce { 0%,80%,100%{transform:scale(0.6);opacity:.4} 40%{transform:scale(1);opacity:1} }
+
+    /* ── Divider ── */
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 20px 0 16px;
+    }
+    .divider::before, .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+    .divider span { color: var(--w40); font-size: 12px; white-space: nowrap; }
+
+    /* ── Social buttons ── */
+    .btn-social {
+      width: 100%;
+      background: var(--w04);
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-family: 'Cairo', sans-serif;
+      font-size: 13px;
+      color: var(--w70);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 8px;
+      transition: background 0.2s, border-color 0.2s, transform 0.15s;
+    }
+    .btn-social:hover  { background: var(--w08); border-color: rgba(255,255,255,0.18); }
+    .btn-social:active { transform: scale(0.98); }
+
+    .btn-social svg { flex-shrink: 0; }
+
+    /* ── Footer link ── */
+    .footer-text {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 12px;
+      color: var(--w40);
+    }
+    .footer-text a {
+      color: var(--purpleL);
+      text-decoration: none;
+      font-weight: 600;
+      transition: color 0.2s;
+    }
+    .footer-text a:hover { color: var(--purpleLL); }
+
+    /* ── Mobile ── */
+    @media (max-width: 480px) {
+      .card { padding: 28px 20px 24px; border-radius: 16px; }
     }
   </style>
 </head>
 <body>
 
+<!-- Background -->
 <div class="orb orb-1"></div>
 <div class="orb orb-2"></div>
+<div class="orb orb-3"></div>
 <div id="flash"></div>
-<div id="recaptcha-container"></div>
 
-<!-- ══ CARD ══ -->
-<div class="card">
-  <div class="logo-wrap">
-    <svg class="bolt-svg" width="110" height="96" viewBox="0 0 110 96" fill="none">
-      <line x1="5" y1="80" x2="105" y2="80" stroke="#7F77DD" stroke-width="0.8" opacity="0.35"/>
-      <polygon points="55,2 43,38 50,37 37,78 63,34 55,35" fill="white" opacity="0.95"/>
-      <polygon points="30,10 22,34 27,33 18,62 36,30 29,31" fill="white" opacity="0.7"/>
-      <polygon points="80,10 88,34 83,33 92,62 74,30 81,31" fill="white" opacity="0.7"/>
-      <polygon points="10,22 6,36 9,36 4,54 14,32 11,32" fill="#C8B8FF" opacity="0.45"/>
-      <polygon points="100,22 104,36 101,36 106,54 96,32 99,32" fill="#C8B8FF" opacity="0.4"/>
-      <circle class="crack" cx="48" cy="80" r="5" fill="#C8B8FF" opacity="0.6"/>
-      <g class="crack">
-        <line x1="48" y1="80" x2="20" y2="98"  stroke="url(#cg)" stroke-width="1.8" stroke-linecap="round"/>
-        <line x1="48" y1="80" x2="74" y2="100" stroke="url(#cg)" stroke-width="1.8" stroke-linecap="round"/>
-        <line x1="48" y1="80" x2="0"  y2="90"  stroke="url(#cg)" stroke-width="1.2" stroke-linecap="round"/>
-        <line x1="48" y1="80" x2="105" y2="88" stroke="url(#cg)" stroke-width="1.2" stroke-linecap="round"/>
-        <line x1="48" y1="80" x2="48" y2="96"  stroke="url(#cg)" stroke-width="1.4" stroke-linecap="round"/>
-      </g>
-      <defs>
-        <linearGradient id="cg" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="#C8B8FF"/>
-          <stop offset="100%" stop-color="#534AB700"/>
-        </linearGradient>
-      </defs>
-    </svg>
-    <div class="logo-title">WELCOME</div>
-    <div class="logo-sub">AgentX.Ai</div>
-  </div>
+<div class="page">
+  <div class="card">
 
-  <!-- Email -->
-  <div class="field-wrap">
-    <span class="field-icon">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-        <rect x="2" y="4" width="20" height="16" rx="3"/><polyline points="2,4 12,13 22,4"/>
-      </svg>
-    </span>
-    <input type="email" id="emailInput" placeholder="البريد الإلكتروني" autocomplete="email"/>
-  </div>
+    <!-- Logo / Lightning -->
+    <div class="logo-area">
+      <canvas id="boltCanvas" width="240" height="200"></canvas>
+      <div class="brand-welcome">WELCOME</div>
+      <div class="brand-name">AgentX.Ai</div>
+    </div>
 
-  <!-- Password -->
-  <div class="field-wrap">
-    <span class="field-icon">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-        <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-      </svg>
-    </span>
-    <input type="password" id="passInput" placeholder="كلمة المرور" autocomplete="current-password" class="has-suffix"/>
-    <button class="field-suffix" onclick="togglePass()" type="button">
-      <svg id="eyeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
-      </svg>
+    <!-- Error -->
+    <div id="errorMsg"></div>
+
+    <!-- Email -->
+    <div class="input-group">
+      <span class="input-icon">✉️</span>
+      <input id="email" type="email" placeholder="البريد الإلكتروني" autocomplete="email" />
+    </div>
+
+    <!-- Password -->
+    <div class="input-group">
+      <span class="input-icon">🔒</span>
+      <input id="password" type="password" placeholder="كلمة المرور" autocomplete="current-password" />
+      <button class="eye-btn" id="eyeBtn" type="button" title="إظهار / إخفاء">👁️</button>
+    </div>
+
+    <!-- Login -->
+    <button class="btn-primary" id="loginBtn">
+      <div id="spinner"><div class="spin-dot"></div><div class="spin-dot"></div><div class="spin-dot"></div></div>
+      <span id="loginLabel">تسجيل الدخول</span>
     </button>
-  </div>
 
-  <button class="btn-primary" id="loginBtn" onclick="handleEmailLogin()">تسجيل الدخول</button>
+    <div class="divider"><span>أو</span></div>
 
-  <div class="divider"><hr/><span>أو</span><hr/></div>
+    <!-- Google -->
+    <button class="btn-social" id="googleBtn">
+      <svg width="18" height="18" viewBox="0 0 18 18">
+        <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" fill="#4285F4"/>
+        <path d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853"/>
+        <path d="M3.964 10.707A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.707V4.961H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.039l3.007-2.332z" fill="#FBBC05"/>
+        <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.96l3.007 2.332C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
+      </svg>
+      المتابعة بـ Google
+    </button>
 
-  <!-- Google -->
-  <button class="btn-social" onclick="handleGoogleLogin()">
-    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-      <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 01-1.796 2.716v2.258h2.908C16.658 14.013 17.64 11.706 17.64 9.2z" fill="#4285F4"/>
-      <path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z" fill="#34A853"/>
-      <path d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/>
-      <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
-    </svg>
-    المتابعة بـ Google
-  </button>
 
-  <!-- Phone -->
-  <button class="btn-social" onclick="openPhoneModal()">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-      <rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="17" r="1"/>
-    </svg>
-    المتابعة برقم الهاتف
-  </button>
-
-  <div class="register-row">ليس لديك حساب؟ <a href="#">إنشاء حساب</a></div>
-</div>
-
-<!-- ══ PHONE MODAL ══ -->
-<div class="modal-backdrop" id="phoneModal">
-  <div class="modal">
-    <h3>📱 تسجيل الدخول برقم الهاتف</h3>
-    <p>سيتم إرسال كود تحقق عبر SMS</p>
-    <div class="phone-row">
-      <input class="country-code" id="countryCode" type="text" value="+20"/>
-      <input class="phone-number" id="phoneNumber" type="tel" placeholder="1xxxxxxxxx" style="text-align:left;padding-right:14px;"/>
+    <div class="footer-text">
+      ليس لديك حساب؟ <a href="#">إنشاء حساب</a>
     </div>
-    <div class="modal-btns">
-      <button class="btn-cancel" onclick="closePhoneModal()">إلغاء</button>
-      <button class="btn-confirm" id="sendOtpBtn" onclick="handleSendOTP()">إرسال الكود</button>
-    </div>
+
   </div>
 </div>
-
-<!-- ══ OTP MODAL ══ -->
-<div class="modal-backdrop" id="otpModal">
-  <div class="modal">
-    <h3>🔐 أدخل كود التحقق</h3>
-    <p id="otpSubtitle">تم إرسال كود مكون من 6 أرقام إلى رقمك</p>
-    <div class="otp-wrap">
-      <input class="otp-box" maxlength="1" type="tel" id="otp0" oninput="otpNext(this,0)" onkeydown="otpBack(event,0)"/>
-      <input class="otp-box" maxlength="1" type="tel" id="otp1" oninput="otpNext(this,1)" onkeydown="otpBack(event,1)"/>
-      <input class="otp-box" maxlength="1" type="tel" id="otp2" oninput="otpNext(this,2)" onkeydown="otpBack(event,2)"/>
-      <input class="otp-box" maxlength="1" type="tel" id="otp3" oninput="otpNext(this,3)" onkeydown="otpBack(event,3)"/>
-      <input class="otp-box" maxlength="1" type="tel" id="otp4" oninput="otpNext(this,4)" onkeydown="otpBack(event,4)"/>
-      <input class="otp-box" maxlength="1" type="tel" id="otp5" oninput="otpNext(this,5)" onkeydown="otpBack(event,5)"/>
-    </div>
-    <div class="modal-btns">
-      <button class="btn-cancel" onclick="backToPhone()">رجوع</button>
-      <button class="btn-confirm" id="verifyOtpBtn" onclick="handleVerifyOTP()">تأكيد</button>
-    </div>
-  </div>
-</div>
-
-<div id="snack"></div>
-
+<!-- Lightning animation -->
 <script>
-  let passVisible = false;
-  function togglePass() {
-    passVisible = !passVisible;
-    document.getElementById('passInput').type = passVisible ? 'text' : 'password';
-    document.getElementById('eyeIcon').innerHTML = passVisible
-      ? `<path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/>
-         <path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/>
-         <line x1="1" y1="1" x2="23" y2="23"/>`
-      : `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>`;
-  }
-
-  let snackTimer;
-  function showSnack(msg) {
-    const el = document.getElementById('snack');
-    el.textContent = msg;
-    el.classList.add('show');
-    clearTimeout(snackTimer);
-    snackTimer = setTimeout(() => el.classList.remove('show'), 3500);
-  }
-
-  function translateError(code) {
-    const map = {
-      'auth/user-not-found':            'البريد الإلكتروني غير مسجل',
-      'auth/wrong-password':            'كلمة المرور غير صحيحة',
-      'auth/invalid-email':             'البريد الإلكتروني غير صالح',
-      'auth/user-disabled':             'تم تعطيل هذا الحساب',
-      'auth/too-many-requests':         'محاولات كثيرة، حاول لاحقاً',
-      'auth/network-request-failed':    'تحقق من اتصال الإنترنت',
-      'auth/invalid-credential':        'بيانات الدخول غير صحيحة',
-      'auth/invalid-verification-code': 'كود التحقق غير صحيح',
-      'auth/code-expired':              'انتهت صلاحية الكود، أعد المحاولة',
-      'auth/invalid-phone-number':      'رقم الهاتف غير صالح',
-      'auth/quota-exceeded':            'تجاوزت الحد اليومي للـ SMS',
-    };
-    return map[code] || 'حدث خطأ، حاول مرة أخرى';
-  }
-
-  function setLoginLoading(on) {
-    const b = document.getElementById('loginBtn');
-    b.disabled = on;
-    b.innerHTML = on ? '<span class="spinner"></span>' : 'تسجيل الدخول';
-  }
-  function setSendLoading(on) {
-    const b = document.getElementById('sendOtpBtn');
-    b.disabled = on;
-    b.innerHTML = on ? '<span class="spinner"></span>' : 'إرسال الكود';
-  }
-  function setVerifyLoading(on) {
-    const b = document.getElementById('verifyOtpBtn');
-    b.disabled = on;
-    b.innerHTML = on ? '<span class="spinner"></span>' : 'تأكيد';
-  }
-
-  async function handleEmailLogin() {
-    const email = document.getElementById('emailInput').value.trim();
-    const pass  = document.getElementById('passInput').value;
-    if (!email || !pass) { showSnack('يرجى إدخال البريد وكلمة المرور'); return; }
-    setLoginLoading(true);
-    try {
-      await window.__emailLogin(email, pass);
-    } catch(e) {
-      showSnack(translateError(e.code));
-      setLoginLoading(false);
-    }
-  }
-
-  async function handleGoogleLogin() {
-    try {
-      await window.__googleLogin();
-    } catch(e) {
-      if (e.code !== 'auth/popup-closed-by-user') showSnack(translateError(e.code));
-    }
-  }
-
-  function openPhoneModal() {
-    document.getElementById('phoneModal').classList.add('open');
-    setTimeout(() => document.getElementById('phoneNumber').focus(), 100);
-  }
-  function closePhoneModal() {
-    document.getElementById('phoneModal').classList.remove('open');
-    document.getElementById('phoneNumber').value = '';
-  }
-  function backToPhone() {
-    document.getElementById('otpModal').classList.remove('open');
-    document.getElementById('phoneModal').classList.add('open');
-    clearOTP();
-  }
-
-  async function handleSendOTP() {
-    const code  = document.getElementById('countryCode').value.trim() || '+20';
-    const num   = document.getElementById('phoneNumber').value.trim();
-    if (!num) { showSnack('أدخل رقم الهاتف'); return; }
-    const fullPhone = code + num.replace(/^0/, '');
-    setSendLoading(true);
-    try {
-      await window.__sendOTP(fullPhone);
-      document.getElementById('phoneModal').classList.remove('open');
-      document.getElementById('otpSubtitle').textContent = `تم إرسال كود إلى ${fullPhone}`;
-      document.getElementById('otpModal').classList.add('open');
-      setTimeout(() => document.getElementById('otp0').focus(), 100);
-    } catch(e) {
-      showSnack(translateError(e.code));
-    } finally {
-      setSendLoading(false);
-    }
-  }
-
-  function otpNext(el, idx) {
-    el.value = el.value.replace(/\D/g,'');
-    if (el.value && idx < 5) document.getElementById('otp'+(idx+1)).focus();
-    if (idx === 5 && el.value) handleVerifyOTP();
-  }
-  function otpBack(e, idx) {
-    if (e.key === 'Backspace' && !e.target.value && idx > 0) {
-      document.getElementById('otp'+(idx-1)).focus();
-    }
-  }
-  function clearOTP() { for(let i=0;i<6;i++) document.getElementById('otp'+i).value=''; }
-  function getOTPCode() { return Array.from({length:6},(_,i)=>document.getElementById('otp'+i).value).join(''); }
-
-  async function handleVerifyOTP() {
-    const code = getOTPCode();
-    if (code.length < 6) { showSnack('أدخل الكود كاملاً (6 أرقام)'); return; }
-    setVerifyLoading(true);
-    try {
-      await window.__verifyOTP(code);
-      document.getElementById('otpModal').classList.remove('open');
-    } catch(e) {
-      showSnack(translateError(e.code));
-      clearOTP();
-      document.getElementById('otp0').focus();
-      setVerifyLoading(false);
-    }
-  }
-
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Enter' && !document.querySelector('.modal-backdrop.open')) handleEmailLogin();
+  // Toggle password
+  const eyeBtn  = document.getElementById('eyeBtn');
+  const passInp = document.getElementById('password');
+  eyeBtn.addEventListener('click', () => {
+    const show = passInp.type === 'password';
+    passInp.type = show ? 'text' : 'password';
+    eyeBtn.textContent = show ? '🙈' : '👁️';
   });
+
+  // ── Lightning Canvas ──────────────────────────
+  const canvas = document.getElementById('boltCanvas');
+  const ctx    = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const flash  = document.getElementById('flash');
+  let prog = 0, shakeProg = 0, shaking = false;
+  const SPEED = 0.007;
+
+  function lerp(a, b, t) { return a + (b - a) * t; }
+
+  function drawBolt(pts, alpha, glowR, colors) {
+    if (alpha <= 0) return;
+    ctx.save();
+    const grad = ctx.createLinearGradient(0, 0, 0, H);
+    colors.forEach((c, i) => grad.addColorStop(i / (colors.length - 1), c));
+    ctx.shadowBlur  = glowR;
+    ctx.shadowColor = colors[0];
+    ctx.fillStyle   = grad;
+    ctx.globalAlpha = alpha;
+    ctx.beginPath();
+    ctx.moveTo(pts[0][0], pts[0][1]);
+    for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawCracks(cx, cy, p) {
+    const cracks = [
+      [[cx,cy],[cx-56,cy+40]], [[cx,cy],[cx+52,cy+48]],
+      [[cx,cy],[cx-110,cy+24]], [[cx,cy],[cx+108,cy+20]],
+      [[cx,cy],[cx,cy+60]]
+    ];
+    ctx.save();
+    const grad = ctx.createLinearGradient(0, cy, 0, cy + 60);
+    grad.addColorStop(0, 'rgba(200,184,255,0.9)');
+    grad.addColorStop(1, 'rgba(83,74,183,0)');
+    ctx.strokeStyle = grad;
+    cracks.forEach(([a, b], i) => {
+      ctx.lineWidth   = i < 2 ? 2 : 1;
+      ctx.lineCap     = 'round';
+      ctx.shadowBlur  = 4;
+      ctx.shadowColor = '#C8B8FF';
+      ctx.beginPath();
+      ctx.moveTo(a[0], a[1]);
+      ctx.lineTo(lerp(a[0], b[0], p), lerp(a[1], b[1], p));
+      ctx.stroke();
+    });
+    ctx.restore();
+  }
+
+  function tick() {
+    ctx.clearRect(0, 0, W, H);
+    prog += SPEED;
+    if (prog >= 1) prog = 0;
+
+    const t = prog;
+    // bolt visible in first half of cycle
+    const boltAlpha = t < 0.5
+      ? (t < 0.08 ? t / 0.08 : 1 - (t - 0.08) / 0.42)
+      : 0;
+    const clampedBA = Math.max(0, Math.min(1, boltAlpha));
+
+    // screen flash
+    if (t > 0.09 && t < 0.13) {
+      flash.style.opacity = (0.13 - t) / 0.04 * 0.12;
+    } else { flash.style.opacity = 0; }
+
+    // shake trigger
+    if (t > 0.09 && t < 0.10 && !shaking) {
+      shaking = true; shakeProg = 0;
+    }
+    if (shaking) {
+      shakeProg += 0.07;
+      if (shakeProg >= 1) shaking = false;
+    }
+
+    const cx = W / 2;
+    const groundY = H * 0.76;
+    const shakeX  = shaking ? Math.sin(shakeProg * Math.PI * 6) * 5 * (1 - shakeProg) : 0;
+
+    ctx.save();
+    ctx.translate(shakeX, 0);
+
+    if (clampedBA > 0) {
+      // main bolt
+      drawBolt([
+        [cx, 0], [cx-28, 76], [cx-12, 72], [cx-44, 164], [cx+32, 60], [cx, 64]
+      ], clampedBA * 0.95, 16, [
+        `rgba(255,255,255,${clampedBA})`,
+        `rgba(200,184,255,${clampedBA})`,
+        `rgba(127,119,221,${0.2 * clampedBA})`
+      ]);
+      // side bolts
+      drawBolt([
+        [cx-52, 16], [cx-72, 72], [cx-60, 70], [cx-88, 140], [cx-32, 56], [cx-60, 60]
+      ], clampedBA * 0.7, 10, [
+        `rgba(255,255,255,${0.9 * clampedBA})`,
+        `rgba(159,143,255,${0.1 * clampedBA})`
+      ]);
+      drawBolt([
+        [cx+44, 24], [cx+28, 76], [cx+40, 74], [cx+16, 136], [cx+68, 60], [cx+40, 64]
+      ], clampedBA * 0.65, 10, [
+        `rgba(255,255,255,${0.9 * clampedBA})`,
+        `rgba(159,143,255,${0.1 * clampedBA})`
+      ]);
+    }
+
+    // ground line
+    ctx.save();
+    ctx.strokeStyle = 'rgba(127,119,221,0.25)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(0, groundY); ctx.lineTo(W, groundY); ctx.stroke();
+    ctx.restore();
+
+    const impactP = t < 0.5 ? t / 0.5 : 0;
+    if (impactP > 0.09) {
+      // impact glow
+      ctx.save();
+      ctx.shadowBlur  = 20;
+      ctx.shadowColor = '#C8B8FF';
+      ctx.fillStyle   = `rgba(200,184,255,${0.6 * clampedBA})`;
+      ctx.beginPath();
+      ctx.arc(cx - 16, groundY, 10, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+      // cracks
+      drawCracks(cx - 16, groundY, Math.min(1, (impactP - 0.09) / 0.06));
+    }
+
+    ctx.restore();
+    requestAnimationFrame(tick);
+  }
+
+  tick();
 </script>
+
 </body>
 </html>
