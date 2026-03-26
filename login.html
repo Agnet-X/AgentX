@@ -15,78 +15,108 @@
       signInWithPopup,
       onAuthStateChanged
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import {
+      getFirestore,
+      doc,
+      setDoc,
+      serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-    // ══════════════════════════════════════════
-    //  🔧 ضع هنا الـ Firebase Config بتاعك
-    // ══════════════════════════════════════════
-  const firebaseConfig = {
-  apiKey: "AIzaSyBMbrB0R0Om0t2kryg4SDhAHoaNSBvFnpc",
-  authDomain: "agentx-27ea9.firebaseapp.com",
-  projectId: "agentx-27ea9",
-  storageBucket: "agentx-27ea9.firebasestorage.app",
-  messagingSenderId: "244685077463",
-  appId: "1:244685077463:web:affd6ce25ea0bdbd1a2992",
-  measurementId: "G-XFK1HTX2SN"
-};
+    const firebaseConfig = {
+      apiKey: "AIzaSyBMbrB0R0Om0t2kryg4SDhAHoaNSBvFnpc",
+      authDomain: "agentx-27ea9.firebaseapp.com",
+      projectId: "agentx-27ea9",
+      storageBucket: "agentx-27ea9.firebasestorage.app",
+      messagingSenderId: "244685077463",
+      appId: "1:244685077463:web:affd6ce25ea0bdbd1a2992",
+      measurementId: "G-XFK1HTX2SN"
+    };
 
     const app  = initializeApp(firebaseConfig);
     const auth = getAuth(app);
+    const db   = getFirestore(app);
 
-    // لو المستخدم دخل خلي يروح للصفحة الرئيسية
-    onAuthStateChanged(auth, user => {
-      if (user) window.location.href = "index.html"; // غيّر للرابط بتاعك
-    });
-
-    // ── Email / Password ──────────────────────
-    document.getElementById("loginBtn").addEventListener("click", async () => {
-      const email = document.getElementById("email").value.trim();
-      const pass  = document.getElementById("password").value;
-      if (!email || !pass) return showError("من فضلك ادخل الإيميل وكلمة المرور");
-      setLoading(true);
-      try {
-        await signInWithEmailAndPassword(auth, email, pass);
-      } catch(e) {
-        showError(getFriendlyError(e.code));
-      } finally { setLoading(false); }
-    });
-
-    // ── Google ────────────────────────────────
-    document.getElementById("googleBtn").addEventListener("click", async () => {
-      setLoading(true);
-      try {
-        const provider = new GoogleAuthProvider();
-        await signInWithPopup(auth, provider);
-      } catch(e) {
-        if (e.code !== "auth/popup-closed-by-user") showError(getFriendlyError(e.code));
-      } finally { setLoading(false); }
-    });
-
-
-    function showError(msg) {
-      const el = document.getElementById("errorMsg");
-      el.textContent = msg;
-      el.style.opacity = "1";
-      el.style.transform = "translateY(0)";
-      setTimeout(() => { el.style.opacity = "0"; el.style.transform = "translateY(-6px)"; }, 4000);
+    async function ensureUserDoc(user, provider = "password") {
+      await setDoc(doc(db, "users", user.uid), {
+        uid: user.uid,
+        email: user.email || "",
+        name: user.displayName || "",
+        photoUrl: user.photoURL || "",
+        provider,
+        updatedAt: serverTimestamp(),
+        createdAt: serverTimestamp(),
+      }, { merge: true });
     }
 
-    function setLoading(state) {
-      document.getElementById("loginBtn").disabled = state;
-      document.getElementById("spinner").style.display = state ? "flex" : "none";
-      document.getElementById("loginLabel").style.display = state ? "none" : "block";
-    }
+    document.addEventListener("DOMContentLoaded", () => {
+      // لو المستخدم دخل خلي يروح للصفحة الرئيسية
+      onAuthStateChanged(auth, user => {
+        if (user) window.location.href = "index.html";
+      });
 
-    function getFriendlyError(code) {
-      const map = {
-        "auth/user-not-found":      "لا يوجد حساب بهذا الإيميل",
-        "auth/wrong-password":      "كلمة المرور غلط",
-        "auth/invalid-email":       "الإيميل مش صح",
-        "auth/too-many-requests":   "محاولات كتير، جرّب بعدين",
-        "auth/network-request-failed": "تحقق من اتصالك بالإنترنت",
-        "auth/invalid-verification-code": "كود التحقق غلط",
-      };
-      return map[code] || "حدث خطأ، حاول مرة تانية";
-    }
+      // ── Email / Password ──────────────────────
+      document.getElementById("loginBtn").addEventListener("click", async () => {
+        const email = document.getElementById("email").value.trim();
+        const pass  = document.getElementById("password").value;
+
+        if (!email || !pass) return showError("من فضلك ادخل الإيميل وكلمة المرور");
+
+        setLoading(true);
+        try {
+          const cred = await signInWithEmailAndPassword(auth, email, pass);
+          await ensureUserDoc(cred.user, "password");
+        } catch (e) {
+          showError(getFriendlyError(e.code));
+        } finally {
+          setLoading(false);
+        }
+      });
+
+      // ── Google ────────────────────────────────
+      document.getElementById("googleBtn").addEventListener("click", async () => {
+        setLoading(true);
+        try {
+          const provider = new GoogleAuthProvider();
+          const cred = await signInWithPopup(auth, provider);
+          await ensureUserDoc(cred.user, "google");
+        } catch (e) {
+          if (e.code !== "auth/popup-closed-by-user") showError(getFriendlyError(e.code));
+        } finally {
+          setLoading(false);
+        }
+      });
+
+      function showError(msg) {
+        const el = document.getElementById("errorMsg");
+        el.textContent = msg;
+        el.style.opacity = "1";
+        el.style.transform = "translateY(0)";
+        setTimeout(() => {
+          el.style.opacity = "0";
+          el.style.transform = "translateY(-6px)";
+        }, 4000);
+      }
+
+      function setLoading(state) {
+        document.getElementById("loginBtn").disabled = state;
+        document.getElementById("spinner").style.display = state ? "flex" : "none";
+        document.getElementById("loginLabel").style.display = state ? "none" : "block";
+      }
+
+      function getFriendlyError(code) {
+        const map = {
+          "auth/user-not-found": "لا يوجد حساب بهذا الإيميل",
+          "auth/wrong-password": "كلمة المرور غلط",
+          "auth/invalid-email": "الإيميل مش صح",
+          "auth/too-many-requests": "محاولات كتير، جرّب بعدين",
+          "auth/network-request-failed": "تحقق من اتصالك بالإنترنت",
+          "auth/invalid-verification-code": "كود التحقق غلط",
+          "auth/invalid-credential": "الإيميل أو كلمة المرور غير صحيحة",
+          "auth/operation-not-allowed": "فعّل Email/Password من Firebase Console"
+        };
+        return map[code] || "حدث خطأ، حاول مرة تانية";
+      }
+    });
   </script>
 
   <style>
@@ -412,13 +442,13 @@
       المتابعة بـ Google
     </button>
 
-
     <div class="footer-text">
       ليس لديك حساب؟ <a href="register.html">إنشاء حساب</a>
     </div>
 
   </div>
 </div>
+
 <!-- Lightning animation -->
 <script>
   // Toggle password
