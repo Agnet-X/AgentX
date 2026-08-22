@@ -271,7 +271,11 @@
     };
 
     onAuthStateChanged(auth, (user) => {
-      if (user) window.location.href = "index.html";
+      // صفحة التسجيل مش المفروض توصلها لو انت logged in
+      // لو وصلتها يعني عايز تعمل حساب جديد → اعمل signOut الأول
+      if (user && user.emailVerified) {
+        auth.signOut();
+      }
     });
 
     // مسك نتيجة Google Redirect لو رجع من redirect
