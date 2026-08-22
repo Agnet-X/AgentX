@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AgentX — إنشاء حساب</title>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #090910;
+      --card: #14141f;
+      --border: rgba(255,255,255,0.08);
+      --purple: #534AB7;
+      --purpleL: #7F77DD;
+      --purpleLL: #C8B8FF;
+      --white: #fff;
+      --w70: rgba(255,255,255,0.70);
+      --w40: rgba(255,255,255,0.40);
+      --w08: rgba(255,255,255,0.08);
+      --w04: rgba(255,255,255,0.04);
+    }
+
+    html, body {
+      min-height: 100vh;
+      background: var(--bg);
+      font-family: 'Cairo', sans-serif;
+      color: var(--white);
+      overflow-x: hidden;
+    }
+
+    .page {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 420px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 32px 24px;
+      box-shadow: 0 0 60px rgba(83,74,183,0.12), 0 20px 60px rgba(0,0,0,0.5);
+    }
+
+    .logo-area { text-align: center; margin-bottom: 20px; }
+    .brand-welcome { font-size: 20px; font-weight: 600; margin-bottom: 4px; }
+    .brand-name { font-size: 13px; color: var(--purpleLL); }
+
+    #errorMsg {
+      background: rgba(83,74,183,0.18);
+      border: 1px solid rgba(127,119,221,0.35);
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 13px;
+      color: var(--purpleLL);
+      margin-bottom: 16px;
+      opacity: 0;
+      transform: translateY(-6px);
+      transition: opacity .3s, transform .3s;
+      text-align: center;
+      min-height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .input-group { position: relative; margin-bottom: 12px; }
+    .input-icon {
+      position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+      color: var(--w40); font-size: 16px; pointer-events: none;
+    }
+
+    .input-group input {
+      width: 100%;
+      background: var(--w04);
+      border: 1px solid rgba(83,74,183,0.25);
+      border-radius: 12px;
+      padding: 13px 42px 13px 40px;
+      font-size: 14px;
+      font-family: 'Cairo', sans-serif;
+      color: var(--white);
+      outline: none;
+      text-align: right;
+    }
+
+    .eye-btn {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--w40);
+      font-size: 15px;
+    }
+
+    .btn-primary {
+      width: 100%;
+      background: var(--purple);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      padding: 14px;
+      font-family: 'Cairo', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-primary:disabled { opacity: .6; cursor: not-allowed; }
+
+    #spinner { display: none; align-items: center; gap: 8px; }
+    .spin-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: rgba(255,255,255,0.7);
+      animation: bounce .9s ease-in-out infinite;
+    }
+    .spin-dot:nth-child(2) { animation-delay: .15s; }
+    .spin-dot:nth-child(3) { animation-delay: .30s; }
+    @keyframes bounce { 0%,80%,100%{transform:scale(.6);opacity:.4} 40%{transform:scale(1);opacity:1} }
+
+    .divider {
+      display: flex; align-items: center; gap: 12px; margin: 20px 0 16px;
+    }
+    .divider::before, .divider::after {
+      content: ''; flex: 1; height: 1px; background: var(--border);
+    }
+    .divider span { color: var(--w40); font-size: 12px; }
+
+    .btn-social {
+      width: 100%;
+      background: var(--w04);
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-family: 'Cairo', sans-serif;
+      font-size: 13px;
+      color: var(--w70);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .footer-text {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 12px;
+      color: var(--w40);
+    }
+    .footer-text a { color: var(--purpleL); text-decoration: none; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="card">
+      <div class="logo-area">
+        <div class="brand-welcome">إنشاء حساب</div>
+        <div class="brand-name">AgentX.Ai</div>
+      </div>
+
+      <div id="errorMsg"></div>
+
+      <div class="input-group">
+        <span class="input-icon">✉️</span>
+        <input id="email" type="email" placeholder="البريد الإلكتروني" autocomplete="email" />
+      </div>
+
+      <div class="input-group">
+        <span class="input-icon">🔒</span>
+        <input id="password" type="password" placeholder="كلمة المرور" autocomplete="new-password" />
+        <button class="eye-btn" id="eyeBtn" type="button">👁️</button>
+      </div>
+
+      <div class="input-group">
+        <span class="input-icon">🔒</span>
+        <input id="confirmPassword" type="password" placeholder="تأكيد كلمة المرور" autocomplete="new-password" />
+        <button class="eye-btn" id="eyeBtn2" type="button">👁️</button>
+      </div>
+
+      <button class="btn-primary" id="registerBtn" type="button">
+        <div id="spinner">
+          <div class="spin-dot"></div><div class="spin-dot"></div><div class="spin-dot"></div>
+        </div>
+        <span id="registerLabel">إنشاء الحساب</span>
+      </button>
+
+      <div class="divider"><span>أو</span></div>
+
+      <button class="btn-social" id="googleBtn" type="button">
+        التسجيل بـ Google
+      </button>
+
+      <div class="footer-text">
+        عندك حساب بالفعل؟ <a href="login.html">تسجيل الدخول</a>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import {
+      getAuth,
+      createUserWithEmailAndPassword,
+      GoogleAuthProvider,
+      signInWithPopup,
+      onAuthStateChanged
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import {
+      getFirestore,
+      doc,
+      setDoc,
+      serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBMbrB0R0Om0t2kryg4SDhAHoaNSBvFnpc",
+      authDomain: "agentx-27ea9.firebaseapp.com",
+      projectId: "agentx-27ea9",
+      storageBucket: "agentx-27ea9.firebasestorage.app",
+      messagingSenderId: "244685077463",
+      appId: "1:244685077463:web:affd6ce25ea0bdbd1a2992",
+      measurementId: "G-XFK1HTX2SN"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    async function ensureUserDoc(user, provider = "password") {
+      await setDoc(doc(db, "users", user.uid), {
+        uid: user.uid,
+        email: user.email || "",
+        name: user.displayName || "",
+        photoUrl: user.photoURL || "",
+        provider,
+        updatedAt: serverTimestamp(),
+        createdAt: serverTimestamp(),
+      }, { merge: true });
+    }
+
+    const el = {
+      registerBtn: document.getElementById("registerBtn"),
+      googleBtn: document.getElementById("googleBtn"),
+      email: document.getElementById("email"),
+      password: document.getElementById("password"),
+      confirmPassword: document.getElementById("confirmPassword"),
+      errorMsg: document.getElementById("errorMsg"),
+      spinner: document.getElementById("spinner"),
+      registerLabel: document.getElementById("registerLabel"),
+      eyeBtn: document.getElementById("eyeBtn"),
+      eyeBtn2: document.getElementById("eyeBtn2")
+    };
+
+    onAuthStateChanged(auth, (user) => {
+      if (user) window.location.href = "index.html";
+    });
+
+    el.registerBtn.addEventListener("click", async () => {
+      const email = el.email.value.trim();
+      const pass = el.password.value;
+      const confirm = el.confirmPassword.value;
+
+      if (!email || !pass || !confirm) return showError("من فضلك ادخل كل البيانات");
+      if (pass !== confirm) return showError("كلمة المرور مش متطابقة");
+      if (pass.length < 6) return showError("كلمة المرور لازم تكون 6 حروف على الأقل");
+
+      setLoading(true);
+      try {
+        const cred = await createUserWithEmailAndPassword(auth, email, pass);
+        await ensureUserDoc(cred.user, "password");
+      } catch (e) {
+        console.error("Register error:", e);
+        showError(getFriendlyError(e.code));
+      } finally {
+        setLoading(false);
+      }
+    });
+
+    el.googleBtn.addEventListener("click", async () => {
+      setLoading(true);
+      try {
+        const provider = new GoogleAuthProvider();
+        const cred = await signInWithPopup(auth, provider);
+        await ensureUserDoc(cred.user, "google");
+      } catch (e) {
+        console.error("Google sign-in error:", e);
+        if (e.code !== "auth/popup-closed-by-user") {
+          showError(getFriendlyError(e.code));
+        }
+      } finally {
+        setLoading(false);
+      }
+    });
+
+    el.eyeBtn.addEventListener("click", () => {
+      const show = el.password.type === "password";
+      el.password.type = show ? "text" : "password";
+      el.eyeBtn.textContent = show ? "🙈" : "👁️";
+    });
+
+    el.eyeBtn2.addEventListener("click", () => {
+      const show = el.confirmPassword.type === "password";
+      el.confirmPassword.type = show ? "text" : "password";
+      el.eyeBtn2.textContent = show ? "🙈" : "👁️";
+    });
+
+    function showError(msg) {
+      el.errorMsg.textContent = msg;
+      el.errorMsg.style.opacity = "1";
+      el.errorMsg.style.transform = "translateY(0)";
+      setTimeout(() => {
+        el.errorMsg.style.opacity = "0";
+        el.errorMsg.style.transform = "translateY(-6px)";
+      }, 4000);
+    }
+
+    function setLoading(state) {
+      el.registerBtn.disabled = state;
+      el.googleBtn.disabled = state;
+      el.spinner.style.display = state ? "flex" : "none";
+      el.registerLabel.style.display = state ? "none" : "block";
+    }
+
+    function getFriendlyError(code) {
+      const map = {
+        "auth/email-already-in-use": "الإيميل ده موجود بالفعل",
+        "auth/invalid-email": "الإيميل مش صح",
+        "auth/weak-password": "كلمة المرور ضعيفة جداً",
+        "auth/too-many-requests": "محاولات كتير، جرّب بعدين",
+        "auth/network-request-failed": "تحقق من اتصالك بالإنترنت",
+        "auth/operation-not-allowed": "فعّل Email/Password من Firebase Console",
+        "auth/invalid-credential": "بيانات الدخول غير صحيحة"
+      };
+      return map[code] || `حدث خطأ: ${code || "unknown"}`;
+    }
+  </script>
+</body>
+</html>
