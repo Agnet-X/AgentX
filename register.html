@@ -219,7 +219,8 @@
       getAuth,
       createUserWithEmailAndPassword,
       GoogleAuthProvider,
-      signInWithPopup,
+      signInWithRedirect,
+      getRedirectResult,
       onAuthStateChanged
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import {
@@ -272,6 +273,15 @@
       if (user) window.location.href = "index.html";
     });
 
+    // مسك نتيجة Google Redirect لو رجع من redirect
+    getRedirectResult(auth).then(async (result) => {
+      if (result?.user) {
+        await ensureUserDoc(result.user, "google");
+      }
+    }).catch((e) => {
+      if (e.code !== "auth/popup-closed-by-user") showError(getFriendlyError(e.code));
+    });
+
     el.registerBtn.addEventListener("click", async () => {
       const email = el.email.value.trim();
       const pass = el.password.value;
@@ -297,14 +307,10 @@
       setLoading(true);
       try {
         const provider = new GoogleAuthProvider();
-        const cred = await signInWithPopup(auth, provider);
-        await ensureUserDoc(cred.user, "google");
+        await signInWithRedirect(auth, provider);
       } catch (e) {
         console.error("Google sign-in error:", e);
-        if (e.code !== "auth/popup-closed-by-user") {
-          showError(getFriendlyError(e.code));
-        }
-      } finally {
+        showError(getFriendlyError(e.code));
         setLoading(false);
       }
     });
