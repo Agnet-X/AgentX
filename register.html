@@ -218,6 +218,7 @@
     import {
       getAuth,
       createUserWithEmailAndPassword,
+      sendEmailVerification,
       GoogleAuthProvider,
       signInWithRedirect,
       getRedirectResult,
@@ -295,6 +296,11 @@
       try {
         const cred = await createUserWithEmailAndPassword(auth, email, pass);
         await ensureUserDoc(cred.user, "password");
+        // إرسال إيميل التحقق
+        await sendEmailVerification(cred.user);
+        // تسجيل الخروج حتى يتحقق من إيميله
+        await auth.signOut();
+        showSuccess("تم إنشاء الحساب! تحقق من إيميلك وفعّل الحساب قبل تسجيل الدخول ✅");
       } catch (e) {
         console.error("Register error:", e);
         showError(getFriendlyError(e.code));
@@ -328,12 +334,27 @@
     });
 
     function showError(msg) {
+      el.errorMsg.style.background = "rgba(83,74,183,0.18)";
+      el.errorMsg.style.borderColor = "rgba(127,119,221,0.35)";
+      el.errorMsg.style.color = "var(--purpleLL)";
       el.errorMsg.textContent = msg;
       el.errorMsg.style.opacity = "1";
       el.errorMsg.style.transform = "translateY(0)";
       setTimeout(() => {
         el.errorMsg.style.opacity = "0";
         el.errorMsg.style.transform = "translateY(-6px)";
+      }, 5000);
+    }
+
+    function showSuccess(msg) {
+      el.errorMsg.style.background = "rgba(29,158,117,0.18)";
+      el.errorMsg.style.borderColor = "rgba(29,158,117,0.5)";
+      el.errorMsg.style.color = "#4ade80";
+      el.errorMsg.textContent = msg;
+      el.errorMsg.style.opacity = "1";
+      el.errorMsg.style.transform = "translateY(0)";
+      setTimeout(() => {
+        window.location.href = "login.html";
       }, 4000);
     }
 

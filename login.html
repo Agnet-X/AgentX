@@ -14,7 +14,8 @@
       GoogleAuthProvider,
       signInWithRedirect,
       getRedirectResult,
-      onAuthStateChanged
+      onAuthStateChanged,
+      signOut
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import {
       getFirestore,
@@ -74,6 +75,11 @@
         setLoading(true);
         try {
           const cred = await signInWithEmailAndPassword(auth, email, pass);
+          // التحقق من إن الإيميل متأكد منه
+          if (!cred.user.emailVerified) {
+            await signOut(auth);
+            return showError("من فضلك فعّل حسابك من الإيميل الأول قبل تسجيل الدخول 📧");
+          }
           await ensureUserDoc(cred.user, "password");
         } catch (e) {
           showError(getFriendlyError(e.code));
